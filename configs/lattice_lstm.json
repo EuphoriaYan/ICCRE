@@ -1,0 +1,52 @@
+{
+      "MAX_SEQ_LENGTH": 250,
+      "number_normalized": true,
+      "gaz_file": "sgns.sikuquanshu.word/sgns.sikuquanshu.word",
+      "pretrained_char_embedding": "",
+
+      "use_gaz": true,
+      "fix_gaz_emb": false,
+      "gaz_dropout": 0.2,
+
+      "embsize": 300,
+      "emb_dropout": 0.1,
+
+      "label_size": 0,
+      "hidden_dim": 300,
+      "dropout": 0.2,
+      "lstm_layer": 1,
+      "use_bilstm": true,
+
+      "clip_grad": 1.0,
+
+      "component_dict": "",
+
+      "bert_tokenizer": "chinese_wwm_ext_pytorch",
+      "vocab_size": 21128,
+
+      "gccre_config":{
+            "hidden_dropout_prob": 0.3,
+            "max_position_embeddings": 512,
+            "char2word_dim": 0,
+            "char_drop": 0.3,
+            "char_embsize": 300,
+            "cnn_dropout": 0.3,
+            "dropout": 0.3,
+            "gccre_embsize": 768,
+            "fc_merge": true,
+            "idx2char": null,
+            "level": "char",
+            "loss_mask_ids": [0, 101, 102],
+            "num_fonts_concat": 1,
+            "output_size": 768,
+            "use_pretrained_char_embedding": true,
+            "pretrained_char_embedding": "",
+            "pretrained_char_embedding_path": "sgns.sikuquanshu.word/sgns.sikuquanshu.word",
+            "subchar_embsize": 300,
+            "subchar_type": "",
+            "use_batch_norm": true,
+            "use_layer_norm": false,
+            "use_maxpool": true,
+            "word_embsize": 1024
+      }
+}
