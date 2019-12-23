@@ -167,6 +167,12 @@ class ZztjNERProcessor(DataProcessor):
             line = line.replace(r'\/', '/')
             line = line.replace(r'\"', '\"')
             # line = '<body>' + line + '</body>'
+            soup = BeautifulSoup(line, 'lxml')
+            soup = soup.p
+            for child in soup.children:
+                # a = child.find_all("span", attrs={'class': 'ano'})
+                print(child)
+
             # print(codecs.getdecoder("unicode_escape")(line)[0])
             pattern = re.compile('(<span class=\'ano\'.+?>).+?(</span>)')
             str_list = pattern.findall(line)
