@@ -166,9 +166,11 @@ class ZztjNERProcessor(DataProcessor):
             line = f.readline().strip("\"")
             line = line.replace(r'\/', '/')
             line = line.replace(r'\"', '\"')
-            soup = BeautifulSoup(line, 'lxml')
-            print(soup.text)
+            # line = '<body>' + line + '</body>'
             # print(codecs.getdecoder("unicode_escape")(line)[0])
+            pattern = re.compile('(<span class=\'ano\'.+?>).+?(</span>)')
+            str_list = pattern.findall(line)
+
 
         # delete empty str
         lines = list(filter(None, lines))
