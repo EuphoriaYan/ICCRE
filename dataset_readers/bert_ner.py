@@ -143,36 +143,11 @@ class ResumeNERProcessor(DataProcessor):
         return examples
 
 
-class Trie:
-
-    def __init__(self):
-        self.root = {}
-
-    def insert(self, word: str):
-        node = self.root
-        for char in word:
-            node = node.setdefault(char, {})
-
-    def search(self, word: str):
-        node = self.root
-        res = ''
-        for char in word:
-            if char not in node:
-                return res
-            res += char
-            node = node[char]
-        return res
-
-    def startsWith(self, prefix: str):
-        node = self.root
-        for char in prefix:
-            if char not in node:
-                return False
-            node = node[char]
-        return True
+from bs4 import BeautifulSoup
+import codecs
 
 
-class SinicaNERProcessor(DataProcessor):
+class ZztjNERProcessor(DataProcessor):
 
     def __init__(self):
         self.dev_list = ['史記 書-曆書第四.txt',
@@ -182,41 +157,23 @@ class SinicaNERProcessor(DataProcessor):
                          '史記 書-樂書第二.txt']
         self.ner_tag = ['NB1', 'NB2', 'NB3', 'NB4', 'NB5']
         self.ner_word = set()
-        self.trie = Trie()
-        for label in self.get_labels():
-            self.trie.insert(label)
 
     # processor for the Sinica dataset
-    def _read_iis_file(self, file_name):
+    def _read_zztj_file(self, file_name):
         lines = []
 
         with open(file_name, 'r', encoding='utf-8') as f:
-            raw_lines = f.readlines()
-            for raw_line in raw_lines:
-                sub_sent_lst = re.split('[。，！？：；「」『』、]', raw_line.strip())
-                lines.extend(sub_sent_lst)
+            line = f.readline().strip("\"")
+            line = line.replace(r'\/', '/')
+            line = line.replace(r'\"', '\"')
+            soup = BeautifulSoup(line, 'lxml')
+            print(soup.text)
+            # print(codecs.getdecoder("unicode_escape")(line)[0])
+
         # delete empty str
         lines = list(filter(None, lines))
-        pattern = re.compile('(.*?)\((.*?)\)(\[.*?\])?', re.S)
-        res_lines = []
-        for line in lines:
-            res_line = ''
-            res_label = []
-            tag = re.findall(pattern, line)
-            for i, j, k in tag:
-                if j.startswith('NA1') and k == '[+others]':
-                    self.ner_word.add(i)
-            tag = [(i, self.trie.search(j.upper())) for i, j, k in tag]
-            tag = [(i, j if j in self.ner_tag else 'O') for i, j in tag]
-            # tag = [self.trie.search(t.upper()) for t in tag]
-            # tag = [t if t in self.ner_tag else 'O' for t in tag]
-            for token, label in tag:
-                res_line += token
-                res_label.extend([label] * len(token))
-            assert len(res_line) == len(res_label)
-            res_lines.append((res_line, res_label))
 
-        return res_lines
+        return
 
     def get_train_examples(self, data_dir):
         lines = []
@@ -260,3 +217,8 @@ class SinicaNERProcessor(DataProcessor):
             guid = "{}_{}".format("sinica.ner", str(i))
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
+
+
+if __name__ == '__main__':
+    DataProcessor = ZztjNERProcessor()
+    DataProcessor._read_zztj_file('dataset/ner/zztj/1.txt')
