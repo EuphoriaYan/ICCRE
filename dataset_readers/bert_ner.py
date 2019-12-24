@@ -158,9 +158,20 @@ class ZztjNERProcessor(DataProcessor):
         self.ner_tag = ['NB1', 'NB2', 'NB3', 'NB4', 'NB5']
         self.ner_word = set()
 
+
+
+
+
     # processor for the Sinica dataset
     def _read_zztj_file(self, file_name):
         lines = []
+
+        def analyse(line, tag):
+            for child in tag.children:
+                if type(child) == Tag and child['class'][0] == 'ano':
+                    analyse(line, child)
+                else:
+                    line.append(child)
 
         with open(file_name, 'r', encoding='utf-8') as f:
             line = f.readline().strip("\"")
@@ -169,21 +180,14 @@ class ZztjNERProcessor(DataProcessor):
             # line = '<body>' + line + '</body>'
             soup = BeautifulSoup(line, 'lxml')
             soup = soup.p
+            line = []
+            analyse(line, soup)
+            for i in line:
+                print(i)
+            # delete empty str
 
-            for child in soup.descendants:
-                if type(child) == Tag:
-                    c = child['class']
-                    if c and c[0] == 'ano':
-                        pass
-                    else:
-                        print(child)
-                    # a = child.find_all("span", attrs={'class': 'ano'})
-                else:
-                    print(child)
-
-
-        # delete empty str
         lines = list(filter(None, lines))
+
 
         return
 
