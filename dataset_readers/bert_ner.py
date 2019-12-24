@@ -143,7 +143,7 @@ class ResumeNERProcessor(DataProcessor):
         return examples
 
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import codecs
 
 
@@ -169,10 +169,15 @@ class ZztjNERProcessor(DataProcessor):
             # line = '<body>' + line + '</body>'
             soup = BeautifulSoup(line, 'lxml')
             soup = soup.p
-            for child in soup.children:
-                if child.__class__ == 'Tag':
+
+            for child in soup.descendants:
+                if type(child) == Tag:
+                    c = child['class']
+                    if c and c[0] == 'ano':
+                        pass
+                    else:
+                        print(child)
                     # a = child.find_all("span", attrs={'class': 'ano'})
-                    print(child)
                 else:
                     print(child)
 
