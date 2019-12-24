@@ -170,12 +170,11 @@ class ZztjNERProcessor(DataProcessor):
             soup = BeautifulSoup(line, 'lxml')
             soup = soup.p
             for child in soup.children:
-                # a = child.find_all("span", attrs={'class': 'ano'})
-                print(child)
-
-            # print(codecs.getdecoder("unicode_escape")(line)[0])
-            pattern = re.compile('(<span class=\'ano\'.+?>).+?(</span>)')
-            str_list = pattern.findall(line)
+                if child.__class__ == 'Tag':
+                    # a = child.find_all("span", attrs={'class': 'ano'})
+                    print(child)
+                else:
+                    print(child)
 
 
         # delete empty str
