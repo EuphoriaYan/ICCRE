@@ -171,19 +171,33 @@ class ZztjNERProcessor(DataProcessor):
                 if type(child) == Tag and child['class'][0] == 'ano':
                     analyse(line, child)
                 else:
-                    line.append(child)
+                    line.append(str(child).strip())
 
         with open(file_name, 'r', encoding='utf-8') as f:
-            line = f.readline().strip("\"")
-            line = line.replace(r'\/', '/')
-            line = line.replace(r'\"', '\"')
+            raw_html = f.readline().strip("\"")
+            html = raw_html.replace(r'\/', '/').replace(r'\"', '\"')
             # line = '<body>' + line + '</body>'
-            soup = BeautifulSoup(line, 'lxml')
+            soup = BeautifulSoup(html, 'lxml')
             soup = soup.p
-            line = []
-            analyse(line, soup)
-            for i in line:
-                print(i)
+            components = []
+            analyse(components, soup)
+
+            components = list(filter(None, components))
+            processed_html = ''.join(components)
+            split_pattern = re.compile(r'\\n|。」')
+            processed_html = re.split(split_pattern, processed_html)
+            processed_html = list(filter(None, processed_html))
+
+            for raw_line in processed_html:
+                soup = BeautifulSoup(raw_line, 'lxml')
+                soup = soup.p
+                if soup is not None:
+                    for child in soup:
+                        print(child)
+                print()
+
+
+
             # delete empty str
 
         lines = list(filter(None, lines))
