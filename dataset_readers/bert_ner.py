@@ -184,26 +184,40 @@ class ZztjNERProcessor(DataProcessor):
 
             components = list(filter(None, components))
             processed_html = ''.join(components)
-            split_pattern = re.compile(r'\\n|。」')
+            processed_html = processed_html.replace('、', '').replace('，', '')
+
+            split_pattern = re.compile(r'\\n|。|」|「|：|；|！|？')
             processed_html = re.split(split_pattern, processed_html)
-            processed_html = list(filter(None, processed_html))
+            processed_html = [i.strip() for i in processed_html if i != '']
 
             for raw_line in processed_html:
                 soup = BeautifulSoup(raw_line, 'lxml')
-                soup = soup.p
-                if soup is not None:
-                    for child in soup:
-                        print(child)
-                print()
+                soup = soup.body
+                if soup.p is not None:
+                    soup = soup.p
+                line = ''
+                label = []
+                for child in soup.children:
+                    if type(child) == Tag:
+                        cls = child['class'][0]
+                        s = str(child.text)
+                        line += s
+                        label.extend([cls] * len(s))
+                    else:
+                        s = str(child)
+                        line += s
+                        label.extend(['o'] * len(s))
+                lines.append((line, label))
+        for line, label in lines:
+            assert len(line) == len(label)
+            print(line)
+            print(label)
 
-
-
-            # delete empty str
-
+        # delete empty str
         lines = list(filter(None, lines))
 
 
-        return
+        return lines
 
     def get_train_examples(self, data_dir):
         lines = []
