@@ -150,19 +150,9 @@ import codecs
 class ZztjNERProcessor(DataProcessor):
 
     def __init__(self):
-        self.dev_list = ['史記 書-曆書第四.txt',
-                         '史記 書-律書第三.txt',
-                         '史記 書-平準書第八.txt',
-                         '史記 書-天官書第五.txt',
-                         '史記 書-樂書第二.txt']
-        self.ner_tag = ['NB1', 'NB2', 'NB3', 'NB4', 'NB5']
-        self.ner_word = set()
+        super(ZztjNERProcessor, self).__init__()
 
-
-
-
-
-    # processor for the Sinica dataset
+    # processor for the zztj dataset
     def _read_zztj_file(self, file_name):
         lines = []
 
@@ -175,79 +165,74 @@ class ZztjNERProcessor(DataProcessor):
 
         with open(file_name, 'r', encoding='utf-8') as f:
             raw_html = f.readline().strip("\"")
-            html = raw_html.replace(r'\/', '/').replace(r'\"', '\"')
-            # line = '<body>' + line + '</body>'
-            soup = BeautifulSoup(html, 'lxml')
-            soup = soup.p
-            components = []
-            analyse(components, soup)
+        html = raw_html.replace(r'\/', '/').replace(r'\"', '\"')
+        # line = '<body>' + line + '</body>'
+        soup = BeautifulSoup(html, 'lxml')
+        soup = soup.p
+        components = []
+        analyse(components, soup)
 
-            components = list(filter(None, components))
-            processed_html = ''.join(components)
-            processed_html = processed_html.replace('、', '').replace('，', '')
+        components = list(filter(None, components))
+        processed_html = ''.join(components)
+        processed_html = processed_html.replace('、', '').replace('，', '')
+        processed_html = processed_html.replace('【', '').replace('】', '')
 
-            split_pattern = re.compile(r'\\n|。|」|「|：|；|！|？')
-            processed_html = re.split(split_pattern, processed_html)
-            processed_html = [i.strip() for i in processed_html if i != '']
+        split_pattern = re.compile(r'\\n|。|」|「|：|；|！|？|『|』')
+        processed_html = re.split(split_pattern, processed_html)
+        processed_html = [i.strip() for i in processed_html if i != '']
 
-            for raw_line in processed_html:
-                soup = BeautifulSoup(raw_line, 'lxml')
-                soup = soup.body
-                if soup.p is not None:
-                    soup = soup.p
-                line = ''
-                label = []
-                for child in soup.children:
-                    if type(child) == Tag:
-                        cls = child['class'][0]
-                        s = str(child.text)
-                        line += s
-                        label.extend([cls] * len(s))
-                    else:
-                        s = str(child)
-                        line += s
-                        label.extend(['o'] * len(s))
-                lines.append((line, label))
-        for line, label in lines:
-            assert len(line) == len(label)
-            print(line)
-            print(label)
-
-        # delete empty str
-        lines = list(filter(None, lines))
-
-
+        for raw_line in processed_html:
+            soup = BeautifulSoup(raw_line, 'lxml')
+            soup = soup.body
+            if soup is None:
+                print(file_name)
+                print(raw_line)
+                continue
+            if soup.p is not None:
+                soup = soup.p
+            line = ''
+            label = []
+            for child in soup.children:
+                if type(child) == Tag:
+                    cls = child['class'][0]
+                    s = str(child.text)
+                    line += s
+                    label.extend([cls] * len(s))
+                    if cls not in self.get_labels():
+                        raise ValueError(cls)
+                else:
+                    s = str(child)
+                    line += s
+                    label.extend(['O'] * len(s))
+            lines.append((line, label))
         return lines
 
     def get_train_examples(self, data_dir):
         lines = []
         for train_file in os.listdir(data_dir):
-            if "史記" in train_file and train_file not in self.dev_list:
-                lines.extend(self._read_iis_file(os.path.join(data_dir, train_file)))
-        print(self.ner_word)
+            num = int(train_file[:-4])
+            if num < 250:
+                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "train")
 
     def get_dev_examples(self, data_dir):
         lines = []
-        for dev_file in self.dev_list:
-            lines.extend(self._read_iis_file(os.path.join(data_dir, dev_file)))
+        for train_file in os.listdir(data_dir):
+            num = int(train_file[:-3])
+            if num >= 250:
+                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "dev")
 
     def get_test_examples(self, data_dir):
         lines = []
-        for test_file in os.listdir(data_dir):
-            if "左傳" in test_file:
-                lines.extend(self._read_iis_file(os.path.join(data_dir, test_file)))
+        for train_file in os.listdir(data_dir):
+            num = int(train_file[:-3])
+            if num >= 250:
+                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "test")
 
-    def get_raw_labels(self):
-        return ['O', 'A', 'C', 'DA', 'DB', 'DC', 'DD', 'DF', 'DG', 'DH', 'DJ', 'DL', 'DN', 'DV', 'I',
-                'NA1', 'NA2', 'NA3', 'NA4', 'NA5', 'NB1', 'NB2', 'NB3', 'NB4', 'NB5',
-                'NF', 'NG', 'NH', 'NI', 'P', 'S', 'T', 'U', 'VA', 'VC1', 'VC2',
-                'VD', 'VE', 'VF', 'VG', 'VH1', 'VH2', 'VI', 'VJ', 'VK', 'VM', 'VP']
-
     def get_labels(self):
-        return ['O', 'NB1', 'NB2', 'NB3', 'NB4', 'NB5']
+        return ['O', 'liter', 'peop', 'tpn', 'date', 'offi']
 
     def _create_examples(self, lines, set_type):
         # create examples for the training and dev sets
@@ -258,11 +243,11 @@ class ZztjNERProcessor(DataProcessor):
             text_a = line[0]
             text_b = None
             label = line[1]
-            guid = "{}_{}".format("sinica.ner", str(i))
+            guid = "{}_{}".format("zztj.ner", str(i))
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
 if __name__ == '__main__':
     DataProcessor = ZztjNERProcessor()
-    DataProcessor._read_zztj_file('dataset/ner/zztj/1.txt')
+    DataProcessor.get_train_examples('dataset/ner/zztj')
