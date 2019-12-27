@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/cws+pos/zuozhuan
 output_dir=output
 config_path=configs/traditional_bert.json
@@ -19,7 +19,7 @@ checkpoint=1000
 output_model_name=zuozhuan_pos_ft_traditional_chinese_pytorch.bin
 
 
-python ${repo_path}/bin/run_bert_tagger.py \
+python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

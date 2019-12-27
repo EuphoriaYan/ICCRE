@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/ner/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
@@ -20,7 +20,7 @@ output_model_name=shiji_ner_ft_wcm_full_pytorch.bin
 use_crf=True
 
 
-python ${repo_path}/bin/run_bert_tagger.py \
+python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

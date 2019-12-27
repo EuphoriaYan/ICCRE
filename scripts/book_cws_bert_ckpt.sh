@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/cws_new
 output_dir=output
 config_path=configs/traditional_bert.json
@@ -13,7 +13,7 @@ test_batch=32
 
 ckpt_name=shiji_cws_ft_chinese_bert_pytorch.bin
 
-python ${repo_path}/bin/run_ckpt_bert_tagger.py \
+python bin/run_ckpt_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

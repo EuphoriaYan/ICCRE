@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/cws+pos/zuozhuan
 output_dir=output
 config_path=configs/traditional_bert.json
@@ -17,7 +17,7 @@ checkpoint=1000
 
 
 
-python ${repo_path}/bin/run_lstm_tagger.py \
+python bin/run_lstm_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

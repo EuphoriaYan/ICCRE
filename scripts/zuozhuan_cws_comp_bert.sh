@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/cws/zuozhuan
 output_dir=output
 config_path=configs/wcm_bert.json
@@ -19,7 +19,7 @@ checkpoint=500
 output_model_name=zuozhuan_cws_ft_wcm_full_pytorch.bin
 
 
-python ${repo_path}/bin/run_bert_tagger.py \
+python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

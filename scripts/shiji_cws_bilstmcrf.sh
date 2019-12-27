@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 data_dir=dataset/cws/shiji
 output_dir=output
 config_path=configs/bert.json
@@ -17,7 +17,7 @@ checkpoint=500
 output_model_name=shiji_cws_ft_bilstm_crf.bin
 
 
-python ${repo_path}/bin/run_lstm_tagger.py \
+python bin/run_lstm_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \

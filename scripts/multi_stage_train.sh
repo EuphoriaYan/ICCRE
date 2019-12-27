@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=..
+
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_full_pytorch
@@ -13,7 +13,7 @@ max_seq_len=128
 test_batch=32
 train_iterator=5
 
-python ${repo_path}/bin/run_multi_stage_training.py \
+python bin/run_multi_stage_training.py \
 --config_path ${config_path} \
 --bert_model ${bert_model} \
 --task_name ${task_name} \
