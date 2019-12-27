@@ -218,7 +218,7 @@ class ZztjNERProcessor(DataProcessor):
     def get_dev_examples(self, data_dir):
         lines = []
         for train_file in os.listdir(data_dir):
-            num = int(train_file[:-3])
+            num = int(train_file[:-4])
             if num >= 250:
                 lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "dev")
@@ -226,7 +226,7 @@ class ZztjNERProcessor(DataProcessor):
     def get_test_examples(self, data_dir):
         lines = []
         for train_file in os.listdir(data_dir):
-            num = int(train_file[:-3])
+            num = int(train_file[:-4])
             if num >= 250:
                 lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "test")
