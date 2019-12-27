@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=/yjs/euphoria/GCCRE
+repo_path=..
 data_dir=dataset/cws_new
 output_dir=output
 config_path=configs/wcm_bert.json

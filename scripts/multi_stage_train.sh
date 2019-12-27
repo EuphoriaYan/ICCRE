@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-repo_path=/yjs/euphoria/GCCRE
+repo_path=..
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_full_pytorch

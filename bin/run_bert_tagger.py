@@ -102,8 +102,9 @@ def load_data(config):
         "zuozhuan_cws": ZuozhuanCWSProcessor,
         "whitespace_cws": WhitespaceCWSPrecessor,
         "shiji_css": ShijiCSSProcessor,
-        "sinica_ner": SinicaNERProcessor,
+        "sinica_pos": SinicaPOSProcessor,
         "zuozhuan_pos": ZuozhuanPOSProcessor,
+        "zztj_ner": ZztjNERProcessor,
     }
 
     if config.data_sign not in data_processor_list:

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-repo_path=/yjs/euphoria/GCCRE
+repo_path=..
 data_dir=dataset/ner/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_full_pytorch
 device=cuda:2
 
-data_sign=sinica_ner
-task_name=ner
+data_sign=sinica_poos
+task_name=pos
 max_seq_len=128
 train_batch=32
 dev_batch=32

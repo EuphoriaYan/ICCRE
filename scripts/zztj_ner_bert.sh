@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 repo_path=..
-data_dir=dataset/cws+pos/zuozhuan
+data_dir=dataset/ner/zztj
 output_dir=output
 config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_pytorch
-device=cuda:0
+device=cuda:1
 
-data_sign=zuozhuan_pos
-task_name=pos
+data_sign=zztj_ner
+task_name=ner
 max_seq_len=128
-batch_size=32
-learning_rate=1e-3
-num_train_epochs=15
+train_batch=32
+dev_batch=32
+test_batch=32
+learning_rate=5e-5
+num_train_epochs=10
 warmup=0.1
 checkpoint=1000
+output_model_name=zztj_ner_ft_traditional_chinese_pytorch.bin
 
 
-
-python ${repo_path}/bin/run_lstm_tagger.py \
+python ${repo_path}/bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \
@@ -26,12 +28,13 @@ python ${repo_path}/bin/run_lstm_tagger.py \
 --max_seq_length ${max_seq_len} \
 --do_train \
 --do_eval \
---batch_size ${batch_size} \
+--train_batch_size ${train_batch} \
+--dev_batch_size ${dev_batch} \
+--test_batch_size ${test_batch} \
 --learning_rate ${learning_rate} \
 --num_train_epochs ${num_train_epochs} \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---device ${device} \
---use_server \
---export_model false
+--output_model_name ${output_model_name} \
+--device ${device}
