@@ -93,8 +93,11 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         pred_all = []
         gold_all = []
         for pred, gold, l in zip(pred_lst, gold_lst, lst_len):
-            pred_all.extend(pred[1:l + 1])
-            gold_all.extend(gold[1:l + 1])
+            p_temp = pred[1:l+1]
+            g_temp = gold[1:l+1]
+            assert len(p_temp) == len(g_temp), p_temp + g_temp
+            pred_all.extend(p_temp)
+            gold_all.extend(g_temp)
 
         precision = precision_score(gold_all, pred_all, average='macro')
         recall = recall_score(gold_all, pred_all, average='macro')
