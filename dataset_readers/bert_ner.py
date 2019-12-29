@@ -204,6 +204,8 @@ class ZztjNERProcessor(DataProcessor):
                     s = str(child)
                     line += s
                     label.extend(['O'] * len(s))
+
+            assert len(line) == len(label)
             lines.append((line, label))
         return lines
 
