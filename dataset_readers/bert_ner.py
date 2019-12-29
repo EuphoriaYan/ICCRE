@@ -179,7 +179,8 @@ class ZztjNERProcessor(DataProcessor):
 
         split_pattern = re.compile(r'\\n|。|」|「|：|；|！|？|『|』')
         processed_html = re.split(split_pattern, processed_html)
-        processed_html = [i.strip() for i in processed_html if i != '']
+        processed_html = [i.strip() for i in processed_html]
+        processed_html = list(filter(None, processed_html))
 
         for raw_line in processed_html:
             soup = BeautifulSoup(raw_line, 'lxml')
