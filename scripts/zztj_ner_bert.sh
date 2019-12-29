@@ -28,6 +28,7 @@ python bin/run_bert_tagger.py \
 --max_seq_length ${max_seq_len} \
 --do_train \
 --do_eval \
+--use_server \
 --train_batch_size ${train_batch} \
 --dev_batch_size ${dev_batch} \
 --test_batch_size ${test_batch} \
