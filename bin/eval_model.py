@@ -98,6 +98,7 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
             if len(p_temp) != len(g_temp):
                 print(p_temp)
                 print(g_temp)
+                print(l)
                 continue
             pred_all.extend(p_temp)
             gold_all.extend(g_temp)
