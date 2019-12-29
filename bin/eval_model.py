@@ -95,7 +95,10 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         for pred, gold, l in zip(pred_lst, gold_lst, lst_len):
             p_temp = pred[1:l+1]
             g_temp = gold[1:l+1]
-            assert len(p_temp) == len(g_temp), p_temp + g_temp
+            if len(p_temp) != len(g_temp):
+                print(p_temp)
+                print(g_temp)
+                continue
             pred_all.extend(p_temp)
             gold_all.extend(g_temp)
 
