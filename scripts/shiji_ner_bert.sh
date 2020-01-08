@@ -4,7 +4,7 @@ data_dir=dataset/ner/shiji
 output_dir=output
 config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_pytorch
-device=cuda:1
+device=cuda:0
 
 data_sign=sinica_pos
 task_name=pos

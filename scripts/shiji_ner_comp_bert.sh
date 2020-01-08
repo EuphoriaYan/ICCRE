@@ -4,7 +4,7 @@ data_dir=dataset/ner/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_full_pytorch
-device=cuda:2
+device=cuda:1
 
 data_sign=sinica_poos
 task_name=pos

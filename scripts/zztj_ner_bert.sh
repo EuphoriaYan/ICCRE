@@ -4,7 +4,7 @@ data_dir=dataset/ner/zztj
 output_dir=output
 config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_pytorch
-device=cuda:1
+device=cuda:2
 
 data_sign=zztj_ner
 task_name=ner
