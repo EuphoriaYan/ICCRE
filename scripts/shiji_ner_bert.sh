@@ -17,8 +17,6 @@ num_train_epochs=4
 warmup=0.1
 checkpoint=1000
 output_model_name=shiji_ner_ft_traditional_chinese_pytorch.bin
-use_crf=true
-
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
@@ -39,5 +37,4 @@ python bin/run_bert_tagger.py \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
 --output_model_name ${output_model_name} \
---device ${device} \
---use_crf ${use_crf}
+--device ${device}
