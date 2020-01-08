@@ -6,8 +6,8 @@ config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_pytorch
 device=cuda:0
 
-data_sign=sinica_pos
-task_name=pos
+data_sign=sinica_ner
+task_name=ner
 max_seq_len=128
 train_batch=32
 dev_batch=32

@@ -103,6 +103,7 @@ def load_data(config):
         "whitespace_cws": WhitespaceCWSPrecessor,
         "shiji_css": ShijiCSSProcessor,
         "sinica_pos": SinicaPOSProcessor,
+        "sinica_ner": SinicaNERProcessor,
         "zuozhuan_pos": ZuozhuanPOSProcessor,
         "zztj_ner": ZztjNERProcessor,
     }
