@@ -48,7 +48,7 @@ def args_parser():
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
     parser.add_argument("--use_server", action="store_true")
-    parser.add_argument("--use_crf", type=bool, default=True)
+    parser.add_argument("--use_crf", action="store_true")
 
     # # other parameters
     parser.add_argument("--device", type=str, default="cpu")

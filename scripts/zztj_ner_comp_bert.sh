@@ -18,7 +18,6 @@ warmup=0.1
 checkpoint=1000
 output_model_name=zztj_ner_ft_traditional_chinese_pytorch.bin
 
-
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
@@ -38,5 +37,4 @@ python bin/run_bert_tagger.py \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
 --output_model_name ${output_model_name} \
---device ${device} \
---use_crf false
+--device ${device}
