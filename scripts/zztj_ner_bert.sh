@@ -2,9 +2,9 @@
 
 data_dir=dataset/ner/zztj
 output_dir=output
-config_path=configs/bert.json
-bert_model=chinese_L-12_H-768_A-12
-device=cuda:1
+config_path=configs/traditional_bert.json
+bert_model=traditional_chinese_pytorch
+device=cuda:2
 
 data_sign=zztj_ner
 task_name=ner
@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=4
 warmup=0.1
 checkpoint=1000
-output_model_name=zztj_ner_ft_bert_pytorch.bin
+output_model_name=zztj_ner_ft_traditional_bert_pytorch.bin
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
