@@ -16,7 +16,6 @@ from torch.optim import Adam
 
 from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam, warmup_linear
-from utils.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from utils.config import Config
 from dataset_readers.bert_ner import *
 from dataset_readers.bert_pos import *

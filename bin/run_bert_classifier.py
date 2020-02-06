@@ -5,21 +5,22 @@ import os
 import sys
 
 root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
-print("check the root_path of this repo")
-print(root_path)
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
+server_root_path = '/yjs/euphoria/ICCRE/'
+
 import torch
+import torch.nn as nn
+from torch.optim import Adam
 
-
-from utils.tokenization import BertTokenizer
+from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam
 from utils.config import Config
 from dataset_readers.bert_sent_pair import *
 from models.bert.bert_classifier import BertClassifier
-from utils.metrics.cls_evaluate_funcs import acc_and_f1
 from dataset_readers.bert_data_utils import convert_examples_to_features
+from bin.train_model import train
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -30,39 +31,40 @@ def args_parser():
     parser = argparse.ArgumentParser()
 
     # required parameters
-    parser.add_argument("--config_path", default="/home/lixiaoya/dataset/", type=str)
+    parser.add_argument("--config_path", default="configs/bert.json", type=str)
     parser.add_argument("--data_dir", default=None, type=str, help="the input data dir")
+    parser.add_argument("--data_sign", type=str, default="shijin_cls")
     parser.add_argument("--bert_model", default=None, type=str, required=True,
                         help="bert-large-uncased, bert-base-cased, bert-large-cased")
     parser.add_argument("--task_name", default=None, type=str)
-    # parser.add_argument("--output_dir", default=None,
-    #     type=str, required=True, help="the outptu directory where the model predictions and checkpoints will")
-
-    # # other parameters
-    parser.add_argument("--cuda", type=bool, default=True)
-    parser.add_argument("--max_seq_length", default=128,
-                        type=int, help="the maximum total input sequence length after ")
+    parser.add_argument("--output_dir", type=str, default="output")
+    parser.add_argument("--output_model_name", type=str, default="pytorch_model.bin")
     parser.add_argument("--do_train", action="store_true",
                         help="Whether to run training")
     parser.add_argument("--do_eval", action="store_true",
-                        help="set this flag if you are using an uncased model.")
+                        help="Whether to run eval")
+    parser.add_argument("--use_server", action="store_true")
+    parser.add_argument("--use_crf", action="store_true")
+
+    # # other parameters
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--cuda", type=bool, default=True)
+    parser.add_argument("--use_multi_gpu", type=bool, default=False)
+    parser.add_argument("--max_seq_length", default=128,
+                        type=int, help="the maximum total input sequence length after ")
     parser.add_argument("--train_batch_size", default=32, type=int)
     parser.add_argument("--dev_batch_size", default=32, type=int)
-    parser.add_argument("--checkpoint", default=100, type=int)
     parser.add_argument("--test_batch_size", default=32, type=int)
+
+    parser.add_argument("--checkpoint", default=500, type=int)
     parser.add_argument("--learning_rate", default=5e-5, type=float)
-    parser.add_argument("--num_train_epochs", default=3.0, type=float)
+    parser.add_argument("--num_train_epochs", default=4.0, type=float)
     parser.add_argument("--warmup_proportion", default=0.1, type=float)
     parser.add_argument("--local_rank", type=int, default=-1)
+
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-    parser.add_argument("--seed", type=int, default=3306)
-    parser.add_argument("--nworkers", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=7777)
     parser.add_argument("--export_model", type=bool, default=True)
-    parser.add_argument("--output_dir", type=str, default="/data/nfsdata/data/yuxian/train_logs")
-    parser.add_argument("--data_sign", type=str, default="nlpcc-dbqa")
-    parser.add_argument("--output_model_name", type=str, default="pytorch_model.bin")
-    # classifier_sign == "single_linear
-    parser.add_argument("--classifier_sign", type=str, default="single_linear")
     args = parser.parse_args()
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
