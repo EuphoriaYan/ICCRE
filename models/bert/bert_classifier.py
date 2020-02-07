@@ -60,9 +60,10 @@ class BertClassifier(nn.Module):
             raise ValueError
         self.bert = self.bert.from_pretrained(config.bert_model, )
 
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, \
-                labels=None, input_mask=None):
-        last_bert_layer, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, \
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, input_mask=None):
+        last_bert_layer, pooled_output = self.bert(input_ids,
+                                                   token_type_ids,
+                                                   attention_mask,
                                                    output_all_encoded_layers=False)
 
         last_bert_layer = last_bert_layer[:, 0, :]

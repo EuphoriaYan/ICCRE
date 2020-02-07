@@ -18,6 +18,7 @@ from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam
 from utils.config import Config
 from dataset_readers.bert_sent_pair import *
+from dataset_readers.bert_single_sent import *
 from models.bert.bert_classifier import BertClassifier
 from dataset_readers.bert_data_utils import convert_examples_to_features
 from bin.train_model import train
@@ -44,7 +45,6 @@ def args_parser():
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
     parser.add_argument("--use_server", action="store_true")
-    parser.add_argument("--use_crf", action="store_true")
 
     # # other parameters
     parser.add_argument("--device", type=str, default="cpu")
@@ -84,6 +84,11 @@ def args_parser():
 def load_data(config):
     # load some data and processor
     # data_processor = MsraNerProcessor()
+
+    data_processor_list = {
+        "zangls": MsraNERProcessor,
+    }
+
     if config.data_sign == "nlpcc-dbqa":
         data_processor = TextProcessor()
     else:
