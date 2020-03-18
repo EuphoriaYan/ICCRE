@@ -2,7 +2,7 @@
 
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_full_pytorch
+bert_model=chinese_wcm_jt_pytorch
 device=cuda:3
 book_dir=dataset/cws_new
 raw_data=dataset/cws_new/shiji.txt

@@ -3,7 +3,7 @@
 data_dir=dataset/cws_new
 output_dir=output
 config_path=configs/traditional_bert.json
-bert_model=traditional_chinese_pytorch
+bert_model=traditional_chinese_jt
 device=cuda:2
 
 data_sign=book_cws

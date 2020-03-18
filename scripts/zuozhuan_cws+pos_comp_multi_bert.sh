@@ -3,7 +3,7 @@
 data_dir=dataset/cws+pos/zuozhuan
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_full_pytorch
+bert_model=chinese_wcm_jt_pytorch
 device=cuda:1
 
 data_sign=zuozhuan_pos

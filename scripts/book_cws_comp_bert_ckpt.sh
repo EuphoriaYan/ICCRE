@@ -3,7 +3,7 @@
 data_dir=dataset/cws_new
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_full_pytorch
+bert_model=chinese_wcm_jt_pytorch
 device=cuda:1
 
 data_sign=book_cws

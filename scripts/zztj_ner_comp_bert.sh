@@ -3,7 +3,7 @@
 data_dir=dataset/ner/zztj
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_full_pytorch
+bert_model=chinese_wcm_jt_pytorch
 device=cuda:3
 
 data_sign=zztj_ner
