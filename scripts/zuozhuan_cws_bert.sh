@@ -3,7 +3,7 @@
 data_dir=dataset/cws/zuozhuan
 output_dir=output
 config_path=configs/bert.json
-bert_model=chinese_L-12_H-768_A-12
+bert_model=traditonal_chinese_jt
 device=cuda:2
 
 data_sign=zuozhuan_cws
@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=5
 warmup=0.1
 checkpoint=500
-output_model_name=zuozhuan_cws_ft_chinese_bert_pytorch.bin
+output_model_name=zuozhuan_cws_jt_chinese_bert_pytorch.bin
 
 
 python bin/run_bert_tagger.py \

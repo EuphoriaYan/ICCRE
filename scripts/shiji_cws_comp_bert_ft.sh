@@ -3,7 +3,7 @@
 data_dir=dataset/cws/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_jt_pytorch
+bert_model=chinese_wcm_ft_pytorch
 device=cuda:1
 
 data_sign=whitespace_cws
@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=10
 warmup=0.1
 checkpoint=1000
-output_model_name=shiji_cws_jt_wcm_full_pytorch.bin
+output_model_name=shiji_cws_ft_wcm_full_pytorch.bin
 
 
 python bin/run_bert_tagger.py \

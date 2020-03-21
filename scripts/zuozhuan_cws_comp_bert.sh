@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=5
 warmup=0.1
 checkpoint=500
-output_model_name=zuozhuan_cws_ft_wcm_full_pytorch.bin
+output_model_name=zuozhuan_cws_jt_wcm_full_pytorch.bin
 
 
 python bin/run_bert_tagger.py \

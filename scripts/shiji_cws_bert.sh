@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=10
 warmup=0.1
 checkpoint=1000
-output_model_name=shiji_cws_ft_chinese_bert_pytorch.bin
+output_model_name=shiji_cws_jt_chinese_bert_pytorch.bin
 
 
 python bin/run_bert_tagger.py \
