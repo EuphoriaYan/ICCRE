@@ -11,7 +11,7 @@ task_name=BIO_cws
 max_seq_len=128
 test_batch=32
 
-ckpt_name=shiji_cws_ft_chinese_bert_pytorch.bin
+ckpt_name=shiji_cws_jt_chinese_bert_pytorch.bin
 
 python bin/run_ckpt_bert_tagger.py \
 --data_sign ${data_sign} \

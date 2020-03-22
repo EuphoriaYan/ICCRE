@@ -8,7 +8,7 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-server_root_path = '/yjs/euphoria/GCCRE/'
+server_root_path = ''
 
 import torch
 import torch.nn as nn
