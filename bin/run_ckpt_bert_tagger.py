@@ -51,6 +51,7 @@ def args_parser():
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
     parser.add_argument("--use_server", action="store_true")
+    parser.add_argument("--use_crf", action="store_true")
 
     parser.add_argument("--train_batch_size", default=32, type=int)
     parser.add_argument("--dev_batch_size", default=32, type=int)
@@ -68,7 +69,6 @@ def args_parser():
     parser.add_argument("--data_sign", type=str, default="msra_ner")
     parser.add_argument("--output_model_name", type=str, default="pytorch_model.bin")
     parser.add_argument("--ckpt_name", type=str, default="pytorch_model.bin")
-    parser.add_argument("--use_crf", type=bool, default=True)
     args = parser.parse_args()
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
