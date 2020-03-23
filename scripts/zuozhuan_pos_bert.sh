@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=15
 warmup=0.1
 checkpoint=1000
-output_model_name=zuozhuan_pos_ft_traditional_chinese_pytorch.bin
+output_model_name=zuozhuan_pos_jt_traditional_chinese_pytorch.bin
 
 
 python bin/run_bert_tagger.py \

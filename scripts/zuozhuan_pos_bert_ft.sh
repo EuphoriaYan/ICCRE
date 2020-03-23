@@ -2,9 +2,9 @@
 
 data_dir=dataset/cws+pos/zuozhuan
 output_dir=output
-config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_jt_pytorch
-device=cuda:2
+config_path=configs/traditional_bert.json
+bert_model=traditional_chinese_ft
+device=cuda:1
 
 data_sign=zuozhuan_pos
 task_name=pos
@@ -16,7 +16,7 @@ learning_rate=5e-5
 num_train_epochs=15
 warmup=0.1
 checkpoint=1000
-output_model_name=zuozhuan_pos_jt_wcm_full_pytorch.bin
+output_model_name=zuozhuan_pos_ft_traditional_chinese_pytorch.bin
 
 
 python bin/run_bert_tagger.py \
