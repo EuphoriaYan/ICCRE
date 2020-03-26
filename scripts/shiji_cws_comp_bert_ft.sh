@@ -4,7 +4,7 @@ data_dir=dataset/cws/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_ft_pytorch
-device=cuda:1
+device=cuda:3
 
 data_sign=whitespace_cws
 task_name=BIO_cws
