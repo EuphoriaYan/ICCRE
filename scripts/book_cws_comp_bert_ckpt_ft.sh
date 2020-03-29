@@ -10,7 +10,7 @@ task_name=BIO_cws
 max_seq_len=128
 test_batch=32
 
-ckpt_name=shiji_cws_ft_wcm_full_pytorch.bin
+ckpt_name=shiji_cws_ft_wcm_pytorch.bin
 
 export CUDA_VISIBLE_DEVICES=1
 
