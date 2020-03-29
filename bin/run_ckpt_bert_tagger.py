@@ -158,10 +158,10 @@ def load_model(config, label_list):
     model = BertTagger(config, num_labels=len(label_list))
     model_path = os.path.join(config.output_dir, config.ckpt_name)
     if config.use_server:
-        model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(torch.load(model_path, map_location='cuda:0'))
         model.to(device)
     else:
-        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load(model_path, map_location='cpu'))
 
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
