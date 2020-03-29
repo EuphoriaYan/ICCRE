@@ -4,7 +4,7 @@ data_dir=dataset/cws_new
 output_dir=output
 config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_jt
-device=cuda:2
+device=cuda:0
 
 data_sign=book_cws
 task_name=BIO_cws

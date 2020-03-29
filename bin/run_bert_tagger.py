@@ -13,6 +13,7 @@ server_root_path = ''
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+import math
 
 from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam, warmup_linear
@@ -151,7 +152,7 @@ def load_data(config):
 
     test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
 
-    num_train_steps = int(len(train_examples) / config.train_batch_size * config.num_train_epochs)
+    num_train_steps = int(math.ceil(len(train_examples) / config.train_batch_size) * config.num_train_epochs)
     print("Train_examples: ", len(train_examples))
     print("Dev_examples: ", len(dev_examples))
     print("Test_examples: ", len(test_examples))
