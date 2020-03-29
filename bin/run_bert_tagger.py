@@ -51,7 +51,6 @@ def args_parser():
     parser.add_argument("--use_crf", action="store_true")
 
     # # other parameters
-    parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--cuda", type=bool, default=True)
     parser.add_argument("--use_multi_gpu", type=bool, default=False)
     parser.add_argument("--max_seq_length", default=128,

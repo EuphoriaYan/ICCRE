@@ -43,7 +43,6 @@ def args_parser():
     # # other parameters
     parser.add_argument("--cuda", type=bool, default=True)
     parser.add_argument("--use_multi_gpu", type=bool, default=False)
-    parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--max_seq_length", default=128,
                         type=int, help="the maximum total input sequence length after ")
     parser.add_argument("--do_train", action="store_true",
