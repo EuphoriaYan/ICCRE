@@ -147,10 +147,11 @@ def load_model(config, label_list):
     if config.use_server and torch.cuda.is_available():
         if config.use_multi_gpu:
             n_gpu = torch.cuda.device_count()
-            device = torch.device("cuda")
+            # device = torch.device("cuda")
         else:
             n_gpu = 1
-            device = torch.device(config.device)
+            # device = torch.device(config.device)
+        device = torch.device("cuda")
     else:
         device = torch.device("cpu")
         n_gpu = 0
@@ -160,7 +161,6 @@ def load_model(config, label_list):
     if config.use_server:
         model.load_state_dict(torch.load(model_path))
         model.to(device)
-        print('using device:' + config.device)
     else:
         model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 

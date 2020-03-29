@@ -167,10 +167,12 @@ def load_model(config, num_train_steps, label_list):
     if config.use_server and torch.cuda.is_available():
         if config.use_multi_gpu:
             n_gpu = torch.cuda.device_count()
-            device = torch.device("cuda")
+            # device = torch.device("cuda")
         else:
             n_gpu = 1
-            device = torch.device(config.device)
+            # device = torch.device(config.device)
+        device = torch.device("cuda")
+
     else:
         device = torch.device("cpu")
         n_gpu = 0
@@ -179,7 +181,6 @@ def load_model(config, num_train_steps, label_list):
 
     if config.use_server:
         model.to(device)
-        print('using device:' + config.device)
 
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
