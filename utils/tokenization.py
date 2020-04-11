@@ -101,7 +101,7 @@ class BertTokenizer(object):
         for token in self.basic_tokenizer.tokenize(text):
             for sub_token in self.wordpiece_tokenizer.tokenize(token):
                 split_tokens.append(sub_token)
-        return split_tokens
+        return split_tokens, None
 
     def convert_tokens_to_ids(self, tokens):
         """Converts a sequence of tokens into ids using the vocab."""
@@ -400,17 +400,19 @@ class CompTokenizer(object):
     def __init__(self, bert_file, do_lower_case=True):
         vocab_file = os.path.join(bert_file, "vocab.txt")
         self.vocab = load_vocab(vocab_file)
-        self.inv_vocab = {v: k for k, v in self.vocab.items()}
+        self.inv_vocab = collections.OrderedDict([(v, k) for k, v in self.vocab.items()])
         self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case)
         self.comppiece_tokenizer = CompPieceTokenizer(vocab=self.vocab)
 
     def tokenize(self, text):
         split_tokens = []
+        char_mask = []
         for token in self.basic_tokenizer.tokenize(text):
-            for sub_token in self.comppiece_tokenizer.tokenize(token):
-                split_tokens.append(sub_token)
-
-        return split_tokens
+            sub_token, sub_mask = self.comppiece_tokenizer.tokenize(token)
+            assert len(sub_token) == len(sub_mask)
+            split_tokens.extend(sub_token)
+            char_mask.extend(sub_mask)
+        return split_tokens, char_mask
 
     def convert_tokens_to_ids(self, tokens):
         return convert_by_vocab(self.vocab, tokens)
@@ -427,10 +429,10 @@ class CompPieceTokenizer(object):
         self.unk_token = unk_token
         self.max_input_chars_per_word = max_input_chars_per_word
         self.comp_dict = dict()
-        with open("chise-ids/IDS-UCS-Basic.txt", "r", encoding="utf-8") as chaizi:
+        with open("chise-ids/IDS-UCS-Basic.txt", "r", encoding="utf-8") as chise:
             pattern = re.compile('&[A-Z0-9-]+;|.')
-            chaizi.readline()
-            for line in chaizi:
+            chise.readline()
+            for line in chise:
                 l = line.rstrip().split('\t')
                 if l[1] == l[2]:
                     continue
@@ -443,7 +445,8 @@ class CompPieceTokenizer(object):
 
     For example:
       input = "园"
-      output = ["园", "##⿴", "##囗", "##元"]
+      output1 = ["园", "##⿴", "##囗", "##元"]
+      output2 = [1, 0, 0, 0]
 
     Args:
       text: A single token or whitespace separated tokens. This should have
@@ -451,9 +454,11 @@ class CompPieceTokenizer(object):
 
     Returns:
       A list of wordpiece tokens.
+      A list of char mask.
     """
 
         output_tokens = []
+        mask = []
         for token in whitespace_tokenize(text):
             chars = list(token)
             if len(chars) > self.max_input_chars_per_word:
@@ -464,15 +469,18 @@ class CompPieceTokenizer(object):
                 char = chars[0]
                 if _is_chinese_char(char):
                     output_tokens.append(char)
+                    mask.append(1)
                     comp_list = self.comp_dict.get(char)
                     if comp_list:
                         for comp in comp_list:
                             output_tokens.append("##" + comp)
+                            mask.append(0)
                     continue
 
             is_bad = False
             start = 0
             sub_tokens = []
+            sub_mask = []
             while start < len(chars):
                 end = len(chars)
                 cur_substr = None
@@ -488,10 +496,16 @@ class CompPieceTokenizer(object):
                     is_bad = True
                     break
                 sub_tokens.append(cur_substr)
+                if start == 0:
+                    sub_mask.append(1)
+                else:
+                    sub_mask.append(0)
                 start = end
 
             if is_bad:
                 output_tokens.append(self.unk_token)
+                mask.append(1)
             else:
                 output_tokens.extend(sub_tokens)
-        return output_tokens
+                mask.extend(sub_mask)
+        return output_tokens, mask

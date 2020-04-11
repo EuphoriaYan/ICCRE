@@ -8,8 +8,6 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-server_root_path = ''
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -47,8 +45,8 @@ def args_parser():
                         help="Whether to run training")
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
-    parser.add_argument("--use_server", action="store_true")
     parser.add_argument("--use_crf", action="store_true")
+    parser.add_argument("--use_comp", action="store_true")
 
     # # other parameters
     parser.add_argument("--cuda", type=bool, default=True)
@@ -113,7 +111,7 @@ def load_data(config):
     data_processor = data_processor_list[config.data_sign]()
 
     label_list = data_processor.get_labels()
-    if 'wcm' in config.bert_model:
+    if config.use_comp:
         tokenizer = CompTokenizer(config.bert_model)
     else:
         tokenizer = BertTokenizer.from_pretrained(config.bert_model, do_lower_case=True)
@@ -127,7 +125,7 @@ def load_data(config):
         print(set_type + " examples")
         for i in range(min(len(examples), 3)):
             print(examples[i])
-            sys.stdout.flush()
+        sys.stdout.flush()
         features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
                                                 task_sign=config.task_name)
         input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -163,13 +161,11 @@ def load_data(config):
 def load_model(config, num_train_steps, label_list):
     # device = torch.device(torch.cuda.is_available())
 
-    if config.use_server and torch.cuda.is_available():
+    if torch.cuda.is_available():
         if config.use_multi_gpu:
             n_gpu = torch.cuda.device_count()
-            # device = torch.device("cuda")
         else:
             n_gpu = 1
-            # device = torch.device(config.device)
         device = torch.device("cuda")
 
     else:
@@ -177,9 +173,7 @@ def load_model(config, num_train_steps, label_list):
         n_gpu = 0
 
     model = BertTagger(config, num_labels=len(label_list))
-
-    if config.use_server:
-        model.to(device)
+    model.to(device)
 
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
@@ -201,11 +195,13 @@ def load_model(config, num_train_steps, label_list):
 
 
 def merge_config(args_config):
+    """
     if args_config.use_server:
         args_config.config_path = server_root_path + args_config.config_path
         args_config.bert_model = server_root_path + args_config.bert_model
         args_config.data_dir = server_root_path + args_config.data_dir
         args_config.output_dir = server_root_path + args_config.output_dir
+    """
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
     model_config.update_args(args_config)

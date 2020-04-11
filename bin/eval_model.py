@@ -35,7 +35,8 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
             tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, use_crf)
             logits = model_object(input_ids, segment_ids, input_mask, use_crf=use_crf)
 
-        '''logits = logits.detach().cpu().numpy()
+        """
+        logits = logits.detach().cpu().numpy()
         logits = np.argmax(logits, axis=-1)
         label_ids = label_ids.to("cpu").numpy()
         label_len = label_len.to("cpu").numpy()
@@ -43,7 +44,8 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         logits = np.reshape(logits, (reshape_lst[0], reshape_lst[1], -1))
         logits = np.argmax(logits, axis=-1)
         logits = logits.tolist()
-        '''
+        """
+
         label_ids = label_ids.tolist()
         label_len = label_len.tolist()
 

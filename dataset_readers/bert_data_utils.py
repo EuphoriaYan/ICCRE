@@ -102,24 +102,31 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
     features = []
     for (ex_index, example) in enumerate(examples):
-        tokens_a = tokenizer.tokenize(process_sent(example.text_a))
-        tokens_b = None
+        tokens_a, char_mask_a = tokenizer.tokenize(process_sent(example.text_a))
+        tokens_b, char_mask_b = None, None
         if example.text_b:
-            tokens_b = tokenizer.tokenize(example.text_b)
+            tokens_b, char_mask_b = tokenizer.tokenize(example.text_b)
             # Modifies `tokens_a` and `tokens_b` in place so that the total
             # length is less than the specified length.
             # Account for [CLS], [SEP], [SEP] with "- 3"
-            _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
+            _truncate_seq_pair(tokens_a, tokens_b, char_mask_a, char_mask_b, max_seq_length - 3)
         else:
             # Account for [CLS] and [SEP] with "- 2"
             if len(tokens_a) > max_seq_length - 2:
                 tokens_a = tokens_a[:(max_seq_length - 2)]
+                if char_mask_a is not None:
+                    char_mask_a = char_mask_a[:(max_seq_length - 2)]
 
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+        char_mask = None
+        if char_mask_a is not None:
+            char_mask = [0] + char_mask_a + [0]
         segment_ids = [0] * len(tokens)
 
         if tokens_b:
             tokens += tokens_b + ["[SEP]"]
+            if char_mask_b is not None:
+                char_mask += char_mask_b + [0]
             segment_ids += [1] * (len(tokens_b) + 1)
 
         input_ids = tokenizer.convert_tokens_to_ids(tokens)
@@ -136,10 +143,17 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
+        assert len(char_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
 
         if len(example.label) > max_seq_length - 2:
             example.label = example.label[: (max_seq_length - 2)]
+
+        # Check the output should equal number of char.
+        if char_mask is not None:
+            label_len = sum(char_mask)
+            if len(example.label) > label_len:
+                example.label = example.label[: label_len]
 
         if task_sign == "ner":
             label_id = [label_map["O"]] + [label_map[tmp] for tmp in example.label] + [label_map["O"]]
@@ -242,7 +256,7 @@ def convert_examples_to_gccre_features_bert(examples, component_dict, label_list
     return features
 
 
-def _truncate_seq_pair(tokens_a, tokens_b, max_length):
+def _truncate_seq_pair(tokens_a, tokens_b, char_mask_a, char_mask_b, max_length):
     """Truncates a sequence pair in place to the maximum length."""
 
     # This is a simple heuristic which will always truncate the longer sequence
@@ -255,8 +269,12 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
             break
         if len(tokens_a) > len(tokens_b):
             tokens_a.pop()
+            if char_mask_a is not None:
+                char_mask_a.pop()
         else:
             tokens_b.pop()
+            if char_mask_b is not None:
+                char_mask_b.pop()
 
 
 def _truncate_seq_pair_first_a(tokens_a, tokens_b, max_length):

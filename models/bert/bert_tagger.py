@@ -11,7 +11,7 @@ if root_path not in sys.path:
 
 
 import torch 
-import torch.nn as nn 
+import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 import numpy as np
 
@@ -58,9 +58,7 @@ class BertTagger(nn.Module):
 
     # (input_ids, segment_ids, input_mask, label_ids)
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, use_crf=False):
-        last_bert_layer, pooled_output = self.bert(input_ids,
-                                                   token_type_ids,
-                                                   attention_mask,
+        last_bert_layer, pooled_output = self.bert(input_ids, token_type_ids, attention_mask,
                                                    output_all_encoded_layers=False)
         last_bert_layer = last_bert_layer.view(-1, self.hidden_size)
         last_bert_layer = self.dropout(last_bert_layer)
