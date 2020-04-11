@@ -4,7 +4,6 @@ data_dir=dataset/css/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_jt_pytorch
-device=cuda:3
 
 data_sign=shiji_css
 task_name=BIO_cws
@@ -18,6 +17,7 @@ warmup=0.1
 checkpoint=1000
 output_model_name=shiji_css_ft_wcm_full_pytorch.bin
 
+export CUDA_VISIBLE_DEVICES=3
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
@@ -37,4 +37,4 @@ python bin/run_bert_tagger.py \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
 --output_model_name ${output_model_name} \
---device ${device}
+--use_comp

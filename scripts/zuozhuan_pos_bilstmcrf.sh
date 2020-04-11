@@ -4,7 +4,6 @@ data_dir=dataset/cws+pos/zuozhuan
 output_dir=output
 config_path=configs/traditional_bert.json
 bert_model=traditional_chinese_jt
-device=cuda:0
 
 data_sign=zuozhuan_pos
 task_name=pos
@@ -15,7 +14,7 @@ num_train_epochs=15
 warmup=0.1
 checkpoint=1000
 
-
+export CUDA_VISIBLE_DEVICES=0
 
 python bin/run_lstm_tagger.py \
 --data_sign ${data_sign} \
@@ -32,6 +31,4 @@ python bin/run_lstm_tagger.py \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---device ${device} \
---use_server \
 --export_model false

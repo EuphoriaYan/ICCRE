@@ -4,7 +4,6 @@ data_dir=dataset/cws/zuozhuan
 output_dir=output
 config_path=configs/bert.json
 bert_model=traditional_chinese_ft
-device=cuda:2
 
 data_sign=zuozhuan_cws
 task_name=BIO_cws
@@ -18,6 +17,7 @@ warmup=0.1
 checkpoint=500
 output_model_name=zuozhuan_cws_ft_chinese_bert_pytorch.bin
 
+export CUDA_VISIBLE_DEVICES=2
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
@@ -28,7 +28,6 @@ python bin/run_bert_tagger.py \
 --max_seq_length ${max_seq_len} \
 --do_train \
 --do_eval \
---use_server \
 --train_batch_size ${train_batch} \
 --dev_batch_size ${dev_batch} \
 --test_batch_size ${test_batch} \
@@ -37,5 +36,4 @@ python bin/run_bert_tagger.py \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---output_model_name ${output_model_name} \
---device ${device}
+--output_model_name ${output_model_name}

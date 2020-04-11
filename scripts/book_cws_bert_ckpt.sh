@@ -22,7 +22,6 @@ python bin/run_ckpt_bert_tagger.py \
 --task_name ${task_name} \
 --max_seq_length ${max_seq_len} \
 --do_eval \
---use_server \
 --test_batch_size ${test_batch} \
 --output_dir ${output_dir} \
 --ckpt_name ${ckpt_name}

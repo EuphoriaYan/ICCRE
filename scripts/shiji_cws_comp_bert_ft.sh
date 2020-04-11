@@ -4,7 +4,6 @@ data_dir=dataset/cws/shiji
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_ft_pytorch
-device=cuda:3
 
 data_sign=whitespace_cws
 task_name=BIO_cws
@@ -18,6 +17,7 @@ warmup=0.1
 checkpoint=1000
 output_model_name=shiji_cws_ft_wcm_pytorch.bin
 
+export CUDA_VISIBLE_DEVICES=3
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
@@ -28,7 +28,7 @@ python bin/run_bert_tagger.py \
 --max_seq_length ${max_seq_len} \
 --do_train \
 --do_eval \
---use_server \
+--use_comp \
 --train_batch_size ${train_batch} \
 --dev_batch_size ${dev_batch} \
 --test_batch_size ${test_batch} \
@@ -37,5 +37,4 @@ python bin/run_bert_tagger.py \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---output_model_name ${output_model_name} \
---device ${device}
+--output_model_name ${output_model_name}
