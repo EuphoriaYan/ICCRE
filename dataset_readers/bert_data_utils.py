@@ -143,7 +143,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
-        assert len(char_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
 
         if len(example.label) > max_seq_length - 2:
