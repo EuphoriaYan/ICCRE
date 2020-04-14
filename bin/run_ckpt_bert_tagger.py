@@ -8,8 +8,6 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-server_root_path = ''
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -49,7 +47,7 @@ def args_parser():
                         help="Whether to run training")
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
-    parser.add_argument("--use_server", action="store_true")
+    parser.add_argument("--use_comp", action="store_true")
     parser.add_argument("--use_crf", action="store_true")
 
     parser.add_argument("--train_batch_size", default=32, type=int)
@@ -108,7 +106,7 @@ def load_data(config):
     data_processor = data_processor_list[config.data_sign]()
 
     label_list = data_processor.get_labels()
-    if 'wcm' in config.ckpt_name:
+    if config.use_comp:
         tokenizer = CompTokenizer(config.bert_model)
     else:
         tokenizer = BertTokenizer.from_pretrained(config.bert_model, do_lower_case=True)
@@ -143,7 +141,7 @@ def load_data(config):
 def load_model(config, label_list):
     # device = torch.device(torch.cuda.is_available())
 
-    if config.use_server and torch.cuda.is_available():
+    if torch.cuda.is_available():
         if config.use_multi_gpu:
             n_gpu = torch.cuda.device_count()
             # device = torch.device("cuda")
@@ -157,8 +155,8 @@ def load_model(config, label_list):
 
     model = BertTagger(config, num_labels=len(label_list))
     model_path = os.path.join(config.output_dir, config.ckpt_name)
-    if config.use_server:
-        model.load_state_dict(torch.load(model_path, map_location='cuda:0'))
+    if n_gpu > 0:
+        model.load_state_dict(torch.load(model_path, map_location='cuda'))
         model.to(device)
     else:
         model.load_state_dict(torch.load(model_path, map_location='cpu'))
@@ -166,25 +164,12 @@ def load_model(config, label_list):
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
 
-    # prepare optimizer
-    param_optimizer = list(model.named_parameters())
-    no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
-    optimizer_grouped_parameters = [
-        {"params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
-        {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0}]
-
     return model, device, n_gpu
 
 
 def test(model, test_dataloader, config, device, n_gpu, label_list):
-    test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(
-        model_object=model,
-        eval_dataloader=test_dataloader,
-        device=device,
-        label_list=label_list,
-        task_sign=config.task_name,
-        use_crf=config.use_crf
-    )
+    test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(model, test_dataloader, device,
+                                                                        label_list, config.task_name, config.use_crf)
 
     print("TEST: precision, recall, f1, acc, loss ")
     print(test_prec, test_rec, test_f1, test_acc, test_loss, '\n')
@@ -192,11 +177,6 @@ def test(model, test_dataloader, config, device, n_gpu, label_list):
 
 
 def merge_config(args_config):
-    if args_config.use_server:
-        args_config.config_path = server_root_path + args_config.config_path
-        args_config.bert_model = server_root_path + args_config.bert_model
-        args_config.data_dir = server_root_path + args_config.data_dir
-        args_config.output_dir = server_root_path + args_config.output_dir
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
     model_config.update_args(args_config)
