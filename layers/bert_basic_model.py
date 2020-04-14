@@ -1,14 +1,5 @@
 #!/usr/bin/env python3 
-# -*- coding: utf-8 -*- 
-
-
-
-# Author: Xiaoy LI
-# Last update: 2019.03.23 
-# First create: 2019.03.23 
-# Description:
-# bert_basic_model.py
-
+# -*- coding: utf-8 -*-
 
 import os 
 import sys 
