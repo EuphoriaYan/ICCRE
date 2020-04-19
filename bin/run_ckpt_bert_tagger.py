@@ -213,7 +213,7 @@ def test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer):
             config.task_name, config.use_crf)
         print("TEST: precision, recall, f1, acc, loss ")
         print(test_prec, test_rec, test_f1, test_acc, test_loss, '\n')
-        return
+        return 0
     else:
         logits = eval_checkpoint(model, test_dataloader, device, label_list,
             config.task_name, config.use_crf, config.output_file)
@@ -245,7 +245,13 @@ def main():
     model, device, n_gpu = load_model(config, label_list)
     for test_loader, book in zip(test_loader_list, book_list):
         print(book)
-        test(model, test_loader, config, device, n_gpu, label_list, tokenizer)
+        output = test(model, test_loader, config, device, n_gpu, label_list, tokenizer)
+        if output == 0:
+            continue
+        else:
+            with open(config.output_dir + book, 'w', encoding='utf-8') as f:
+                for i in output:
+                    f.write(i+'\n')
         sys.stdout.flush()
 
 
