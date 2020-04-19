@@ -123,26 +123,30 @@ def load_data(config):
         segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
         label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
         label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
-        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        return input_ids, input_mask, segment_ids, label_ids, label_len
+        # data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
         # sampler = DistributedSampler(data)
-        sampler_list = {
-            'random': RandomSampler,
-            'sequential': SequentialSampler,
-        }
-        if sampler_method not in sampler_list:
-            raise ValueError("sample method not found.")
-        sampler = sampler_list[sampler_method](data)
-        return data, sampler
+        # sampler_list = {
+        #    'random': RandomSampler,
+        #    'sequential': SequentialSampler,
+        # }
+        # if sampler_method not in sampler_list:
+        #    raise ValueError("sample method not found.")
+        # sampler = sampler_list[sampler_method](data)
+        # return data, sampler
 
     # convert data example into featrues
 
-    test_dataloader_list = []
+    test_data_list = []
+    # test_sampler_list = []
     for test_examples in test_examples_list:
-        test_data, test_sampler = generate_data(test_examples, 'sequential')
-        test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
-        test_dataloader_list.append(test_dataloader)
+        input_ids, input_mask, segment_ids, label_ids, label_len = generate_data(test_examples)
+        # test_data, test_sampler = generate_data(test_examples, 'sequential')
+        test_data_list.append([input_ids, input_mask, segment_ids, label_ids, label_len])
+        # test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
+        # test_dataloader_list.append(test_dataloader)
 
-    return test_dataloader_list, label_list, book_list, tokenizer
+    return test_data_list, label_list, book_list, tokenizer
 
 
 def load_model(config, label_list):
@@ -217,17 +221,8 @@ def test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer):
     else:
         logits = eval_checkpoint(model, test_dataloader, device, label_list,
             config.task_name, config.use_crf, config.output_file)
-        logits = torch.Tensor(logits, dtype=torch.long)
-        dataset = test_dataloader.dataset
-        input_ids = dataset.input_ids
-        input_mask = dataset.input_mask
-        segment_ids = dataset.segment_ids
-        label_ids = logits
-        label_len = dataset.label_len
-        new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
-        sents = convert_feature_to_sents(new_dataset, tokenizer, label_list)
-        return sents
-
+        logits = torch.tensor(logits, dtype=torch.long)
+        return logits
 
 
 def merge_config(args_config):
@@ -241,16 +236,26 @@ def merge_config(args_config):
 def main():
     args_config = args_parser()
     config = merge_config(args_config)
-    test_loader_list, label_list, book_list, tokenizer = load_data(config)
+    test_data_list, label_list, book_list, tokenizer = load_data(config)
     model, device, n_gpu = load_model(config, label_list)
-    for test_loader, book in zip(test_loader_list, book_list):
+    for test_data, book in zip(test_data_list, book_list):
         print(book)
-        output = test(model, test_loader, config, device, n_gpu, label_list, tokenizer)
-        if output == 0:
+        test_dataset = TensorDataset(*test_data)
+        test_sampler = SequentialSampler(test_dataset)
+        test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=config.test_batch_size)
+        output = test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer)
+        if output is 0:
             continue
         else:
-            with open(config.output_dir + book, 'w', encoding='utf-8') as f:
-                for i in output:
+            input_ids = test_data[0]
+            input_mask = test_data[1]
+            segment_ids = test_data[2]
+            label_ids = output
+            label_len = test_data[4]
+            new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+            sents = convert_feature_to_sents(new_dataset, tokenizer, label_list)
+            with open(os.path.join(config.output_dir, book), 'w', encoding='utf-8') as f:
+                for i in sents:
                     f.write(i+'\n')
         sys.stdout.flush()
 
