@@ -13,7 +13,8 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 
-def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign='ner', use_crf=False):
+def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign='ner', use_crf=False,
+                    output_file=False):
     # input_dataloader type can only be one of dev_dataloader, test_dataloader
     model_object.eval()
 
@@ -32,7 +33,8 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         label_ids = label_ids.to(device)
 
         with torch.no_grad():
-            tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, use_crf)
+            if not output_file:
+                tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, use_crf)
             logits = model_object(input_ids, segment_ids, input_mask, use_crf=use_crf)
 
         """
@@ -46,15 +48,21 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         logits = logits.tolist()
         """
 
-        label_ids = label_ids.tolist()
-        label_len = label_len.tolist()
+        if not output_file:
+            label_ids = label_ids.tolist()
+            label_len = label_len.tolist()
 
-        loss += tmp_eval_loss.mean().item()
+            loss += tmp_eval_loss.mean().item()
 
-        pred_lst += logits
-        gold_lst += label_ids
-        lst_len += label_len
-        eval_steps += 1
+            pred_lst += logits
+            gold_lst += label_ids
+            lst_len += label_len
+            eval_steps += 1
+        else:
+            pred_lst += logits
+
+    if output_file:
+        return pred_lst
 
     average_loss = round(loss / eval_steps, 4)
 
@@ -95,8 +103,8 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         pred_all = []
         gold_all = []
         for pred, gold, l in zip(pred_lst, gold_lst, lst_len):
-            p_temp = pred[1:l+1]
-            g_temp = gold[1:l+1]
+            p_temp = pred[1:l + 1]
+            g_temp = gold[1:l + 1]
             if len(p_temp) != len(g_temp):
                 print(p_temp)
                 print(g_temp)
@@ -162,7 +170,7 @@ def convert2entity(tag_lst, task_sign):
                 last = i
             if tag_lst[i] == 'B':
                 if last != 0:
-                    res_lst.append(str(i)+'_'+str(last))
+                    res_lst.append(str(i) + '_' + str(last))
                 else:
                     res_lst.append(str(i))
                 last = 0
@@ -177,5 +185,5 @@ def convert2entity(tag_lst, task_sign):
                 if start == -1:
                     raise ValueError("E before B")
                 start = -1
-                res_lst.append(str(start)+'_'+str(i))
+                res_lst.append(str(start) + '_' + str(i))
     return res_lst

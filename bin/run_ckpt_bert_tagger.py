@@ -66,6 +66,7 @@ def args_parser():
     parser.add_argument("--data_sign", type=str, default="msra_ner")
     parser.add_argument("--output_model_name", type=str, default="pytorch_model.bin")
     parser.add_argument("--ckpt_name", type=str, default="pytorch_model.bin")
+    parser.add_argument("--output_file", action="store_true")
     args = parser.parse_args()
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
@@ -114,7 +115,7 @@ def load_data(config):
     # load data exampels
     test_examples_list, book_list = data_processor.get_test_examples(config.data_dir)
 
-    def generate_data(examples):
+    def generate_data(examples, sampler_method='random'):
         features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
                                                 task_sign=config.task_name)
         input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -124,18 +125,24 @@ def load_data(config):
         label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
         data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
         # sampler = DistributedSampler(data)
-        sampler = RandomSampler(data)
+        sampler_list = {
+            'random': RandomSampler,
+            'sequential': SequentialSampler,
+        }
+        if sampler_method not in sampler_list:
+            raise ValueError("sample method not found.")
+        sampler = sampler_list[sampler_method](data)
         return data, sampler
 
     # convert data example into featrues
 
     test_dataloader_list = []
     for test_examples in test_examples_list:
-        test_data, test_sampler = generate_data(test_examples)
+        test_data, test_sampler = generate_data(test_examples, 'sequential')
         test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
         test_dataloader_list.append(test_dataloader)
 
-    return test_dataloader_list, label_list, book_list
+    return test_dataloader_list, label_list, book_list, tokenizer
 
 
 def load_model(config, label_list):
@@ -167,13 +174,60 @@ def load_model(config, label_list):
     return model, device, n_gpu
 
 
-def test(model, test_dataloader, config, device, n_gpu, label_list):
-    test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(model, test_dataloader, device,
-                                                                        label_list, config.task_name, config.use_crf)
+def convert_feature_to_sents(dataset, tokenizer, label_list):
+    label_map = {i: label for i, label in enumerate(label_list)}
+    sents = []
+    for input_ids, input_mask, segment_ids, label_ids, label_len in dataset:
+        tokens = tokenizer.convert_ids_to_tokens(input_ids.numpy().tolist())
+        raw_tokens = []
+        for token in tokens:
+            # skip comp-part tokens
+            if token.startswith('#'):
+                continue
+            else:
+                raw_tokens.append(token)
+        raw_tokens = raw_tokens[1:label_len + 1]
 
-    print("TEST: precision, recall, f1, acc, loss ")
-    print(test_prec, test_rec, test_f1, test_acc, test_loss, '\n')
-    return
+        raw_label = label_ids[1:label_len + 1].numpy().tolist()
+        if label_len > 1 and raw_label[1] == 1:
+            raw_label[1] = 0
+        raw_label = [label_map[i] for i in raw_label]
+
+        sent = str()
+        for t, l in zip(raw_tokens, raw_label):
+            if l == 'B':
+                sent += ' '
+                sent += t
+            else:
+                sent += t
+        sent = sent.strip()
+        sents.append(sent)
+
+    return sents
+
+
+def test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer):
+    if not config.output_file:
+        test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(
+            model, test_dataloader, device, label_list,
+            config.task_name, config.use_crf)
+        print("TEST: precision, recall, f1, acc, loss ")
+        print(test_prec, test_rec, test_f1, test_acc, test_loss, '\n')
+        return
+    else:
+        logits = eval_checkpoint(model, test_dataloader, device, label_list,
+            config.task_name, config.use_crf, config.output_file)
+        logits = torch.Tensor(logits, dtype=torch.long)
+        dataset = test_dataloader.dataset
+        input_ids = dataset.input_ids
+        input_mask = dataset.input_mask
+        segment_ids = dataset.segment_ids
+        label_ids = logits
+        label_len = dataset.label_len
+        new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        sents = convert_feature_to_sents(new_dataset, tokenizer, label_list)
+        return sents
+
 
 
 def merge_config(args_config):
@@ -187,11 +241,11 @@ def merge_config(args_config):
 def main():
     args_config = args_parser()
     config = merge_config(args_config)
-    test_loader_list, label_list, book_list = load_data(config)
+    test_loader_list, label_list, book_list, tokenizer = load_data(config)
     model, device, n_gpu = load_model(config, label_list)
     for test_loader, book in zip(test_loader_list, book_list):
         print(book)
-        test(model, test_loader, config, device, n_gpu, label_list)
+        test(model, test_loader, config, device, n_gpu, label_list, tokenizer)
         sys.stdout.flush()
 
 
