@@ -371,6 +371,73 @@ class ZztjNERProcessor(DataProcessor):
         return examples
 
 
+class ArticalNERProcessor(DataProcessor):
+
+    # processor for the artical dataset
+    def _read_artical_file(self, file_name):
+        with open(file_name, 'r', encoding='utf-8') as f:
+            examples = []
+            for line in f:
+                line = line.strip()
+                sents = re.split('[。（）「」：；！？『』，、]', line)
+                sents = [s.strip() for s in sents]
+                sents = list(filter(None, sents))
+
+                for s in sents:
+                    line = ''
+                    label = []
+                    s = s.split(' ')
+                    for segment in s:
+                        if '/' in segment:
+                            t, l = segment.split('/')
+                            if l not in self.get_labels():
+                                raise ValueError(l)
+                            line += t
+                            label.extend([l] * len(t))
+                        else:
+                            line += segment
+                            label.extend(['O'] * len(segment))
+                    assert len(line) == len(label)
+                    examples.append((line, label))
+        return examples
+
+    def get_train_examples(self, data_dir):
+        return
+
+    def get_dev_examples(self, data_dir):
+        return
+
+    def get_test_examples(self, data_dir):
+        book_list = []
+        book_name_list = []
+        for maindir, subdir, file_name_list in os.walk(data_dir):
+            book_name_list = file_name_list
+        for book in book_name_list:
+            if 'txt' not in book:
+                continue
+            print(book)
+            path = os.path.join(data_dir, book)
+            book_example = self._create_examples(self._read_artical_file(path), "test")
+            book_list.append(book_example)
+        return book_list, book_name_list
+
+    def get_labels(self):
+        return ['O', 'liter', 'peop', 'tpn', 'date', 'offi']
+
+    def _create_examples(self, lines, set_type):
+        # create examples for the training and dev sets
+        examples = []
+        for (i, line) in enumerate(lines):
+            if line == "\n":
+                continue
+            text_a = line[0]
+            text_b = None
+            label = line[1]
+            guid = "{}_{}".format("art.ner", str(i))
+            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+
 if __name__ == '__main__':
     DataProcessor = ZztjNERProcessor()
     DataProcessor.get_train_examples('dataset/ner/zztj')

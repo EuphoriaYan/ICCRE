@@ -98,7 +98,9 @@ def load_data(config):
         "pku_cws": PkuCWSProcessor,
         "msr_cws": MsrCWSProcessor,
         "zuozhuan_cws": ZuozhuanCWSProcessor,
-        "book_cws": BookCWSProcessor
+        "book_cws": BookCWSProcessor,
+        "artical_cws": ArticalCWSProcessor,
+        "artical_ner": ArticalNERProcessor,
     }
 
     if config.data_sign not in data_processor_list:
@@ -178,7 +180,7 @@ def load_model(config, label_list):
     return model, device, n_gpu
 
 
-def convert_feature_to_sents(dataset, tokenizer, label_list):
+def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
     label_map = {i: label for i, label in enumerate(label_list)}
     sents = []
     for input_ids, input_mask, segment_ids, label_ids, label_len in dataset:
@@ -197,26 +199,41 @@ def convert_feature_to_sents(dataset, tokenizer, label_list):
             raw_label[1] = 0
         raw_label = [label_map[i] for i in raw_label]
 
-        sent = str()
-        for t, l in zip(raw_tokens, raw_label):
-            if l == 'B':
-                sent += ' '
-                sent += t
-            else:
-                sent += t
-        sent = sent.strip()
-        sents.append(sent)
+        if task_name == 'BIO_cws':
+            sent = ''
+            for t, l in zip(raw_tokens, raw_label):
+                if l == 'B':
+                    sent += ' '
+                    sent += t
+                else:
+                    sent += t
+            sent = sent.strip()
+            sents.append(sent)
+        elif task_name == 'ner':
+            import itertools
+            sent = ''
+            idx = 0
+            for key, group in itertools.groupby(raw_label):
+                l = len(list(group))
+                for i in range(l):
+                    sent += raw_tokens[idx]
+                    idx += 1
+                if key == 'O':
+                    sent += ' '
+                else:
+                    sent += '/' + key + ' '
+            sents.append(sent)
 
     return sents
 
 
 def test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer):
     if not config.output_file:
-        test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(
+        test_loss, test_prec, test_rec, test_f1 = eval_checkpoint(
             model, test_dataloader, device, label_list,
             config.task_name, config.use_crf)
-        print("TEST: precision, recall, f1, acc, loss ")
-        print(test_prec, test_rec, test_f1, test_acc, test_loss, '\n')
+        print("TEST: precision, recall, f1, loss ")
+        print(test_prec, test_rec, test_f1, test_loss, '\n')
         return 0
     else:
         logits = eval_checkpoint(model, test_dataloader, device, label_list,
@@ -253,7 +270,7 @@ def main():
             label_ids = output
             label_len = test_data[4]
             new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
-            sents = convert_feature_to_sents(new_dataset, tokenizer, label_list)
+            sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
             with open(os.path.join(config.output_dir, book), 'w', encoding='utf-8') as f:
                 for i in sents:
                     f.write(i+'\n')

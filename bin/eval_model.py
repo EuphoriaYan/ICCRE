@@ -71,11 +71,7 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         tot_p = 0
         r = 0
         tot_r = 0
-        c = 0
-        tot_c = 0
         for pred, gold, l in zip(pred_lst, gold_lst, lst_len):
-            tot_c += 1
-            flag = True
             for pd, gd in zip(pred[1:l + 1], gold[1:l + 1]):
                 if pd == 0:
                     tot_p += 1
@@ -85,19 +81,13 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
                     tot_r += 1
                     if pd == 0:
                         r += 1
-                if pd != gd:
-                    flag = False
-            if flag:
-                c += 1
         precision = p / tot_p
         recall = r / tot_r
-        accuracy = c / tot_c
         f1 = 2 * precision * recall / (precision + recall)
         eval_f1 = round(f1, 4)
         eval_precision = round(precision, 4)
         eval_recall = round(recall, 4)
-        eval_accuracy = round(accuracy, 4)
-        return average_loss, eval_accuracy, eval_precision, eval_recall, eval_f1
+        return average_loss, eval_precision, eval_recall, eval_f1
 
     elif task_sign == 'ner':
         pred_all = []

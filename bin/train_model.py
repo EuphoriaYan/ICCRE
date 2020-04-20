@@ -37,13 +37,11 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
     nb_tr_steps = 0
     tr_loss = 0
 
-    dev_best_acc = 0
     dev_best_precision = 0
     dev_best_recall = 0
     dev_best_f1 = 0
     dev_best_loss = 1e10
 
-    test_best_acc = 0
     test_best_precision = 0
     test_best_recall = 0
     test_best_f1 = 0
@@ -84,30 +82,28 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
                 print(loss.item())
 
                 if config.do_eval:
-                    dev_loss, dev_acc, dev_prec, dev_rec, dev_f1 = eval_checkpoint(model, dev_dataloader, device,
-                                                                                   label_list, config.task_name,
-                                                                                   use_crf=config.use_crf)
+                    dev_loss, dev_prec, dev_rec, dev_f1 = eval_checkpoint(model, dev_dataloader, device,
+                                                                          label_list, config.task_name,
+                                                                          use_crf=config.use_crf)
 
                     print("..." * 10)
                     print("checkpoint: " + str(int((global_step + 1) / config.checkpoint)))
-                    print("DEV: loss, acc, precision, recall, f1")
-                    print(dev_loss, dev_acc, dev_prec, dev_rec, dev_f1)
+                    print("DEV: loss,  precision, recall, f1")
+                    print(dev_loss, dev_prec, dev_rec, dev_f1)
 
                     if dev_f1 > dev_best_f1:
-                        dev_best_acc = dev_acc
                         dev_best_loss = dev_loss
                         dev_best_precision = dev_prec
                         dev_best_recall = dev_rec
                         dev_best_f1 = dev_f1
-                        test_loss, test_acc, test_prec, test_rec, test_f1 = eval_checkpoint(model, test_dataloader, device,
+                        test_loss, test_prec, test_rec, test_f1 = eval_checkpoint(model, test_dataloader, device,
                                                                                             label_list, config.task_name,
                                                                                             use_crf=config.use_crf)
                         print("......" * 10)
-                        print("TEST: loss, acc, precision, recall, f1")
-                        print(test_loss, test_acc, test_prec, test_rec, test_f1)
+                        print("TEST: loss, precision, recall, f1")
+                        print(test_loss, test_prec, test_rec, test_f1)
 
                         if test_f1 > test_best_f1:
-                            test_best_acc = test_acc
                             test_best_loss = test_loss
                             test_best_precision = test_prec
                             test_best_recall = test_rec
@@ -132,10 +128,10 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
     print("TOTAL_TIME: %.2fs" % (train_finish - train_start))
 
     print("=&=" * 15)
-    print("DEV: current best loss, acc, p, r, f1 ")
-    print(dev_best_loss, dev_best_acc, dev_best_precision, dev_best_recall, dev_best_f1)
-    print("TEST: current best loss, acc, p, r, f1 ")
-    print(test_best_loss, test_best_acc, test_best_precision, test_best_recall, test_best_f1)
+    print("DEV: current best loss, p, r, f1 ")
+    print(dev_best_loss, dev_best_precision, dev_best_recall, dev_best_f1)
+    print("TEST: current best loss, p, r, f1 ")
+    print(test_best_loss, test_best_precision, test_best_recall, test_best_f1)
     print("=&=" * 15)
 
 

@@ -324,3 +324,74 @@ class BookCWSProcessor(DataProcessor):
             guid = "{}_{}".format("book.cws", str(i))
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
+
+import re
+class ArticalCWSProcessor(DataProcessor):
+
+    @classmethod
+    def _read_tsv(cls, input_file, quotechar=None):
+        # reads a artical file.
+        with open(input_file, "r", encoding='utf-8') as f:
+            examples = []
+            for line in f:
+                line = line.strip()
+                sents = re.split('[，。（）「」？！《》、；]', line)
+                sents = [s.strip() for s in sents]
+                sents = list(filter(None, sents))
+                sents = [s.split(' ') for s in sents]
+                for s in sents:
+                    label_list = []
+                    for segment in s:
+                        flag = True
+                        for _ in segment:
+                            if flag:
+                                label_list.append('B')
+                                flag = False
+                            else:
+                                label_list.append('I')
+                    sent = ''.join(s)
+                    assert len(sent) == len(label_list)
+                    examples.append([sent, label_list])
+        return examples
+
+    def get_train_examples(self, data_dir):
+        # see base class
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "tb.txt")), "train")
+
+    def get_test_examples(self, data_dir):
+        # see base class
+        book_list = []
+        book_name_list = []
+        for maindir, subdir, file_name_list in os.walk(data_dir):
+            book_name_list = file_name_list
+
+        for book in book_name_list:
+            if 'txt' not in book:
+                continue
+            print(book)
+            path = os.path.join(data_dir, book)
+            book_example = self._create_examples(self._read_tsv(path), "test")
+            book_list.append(book_example)
+
+        return book_list, book_name_list
+
+    def get_dev_examples(self, data_dir):
+        # see base class
+        pass
+
+    def get_labels(self):
+        return ['B', 'I', ]
+
+    def _create_examples(self, lines, set_type):
+        # create examples for the training and dev sets
+        examples = []
+        for (i, line) in enumerate(lines):
+            if line == "\n":
+                continue
+
+            text_a = line[0]
+            text_b = None
+            label = line[1]
+            guid = "{}_{}".format("book.cws", str(i))
+            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
