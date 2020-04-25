@@ -273,69 +273,22 @@ class ZztjNERProcessor(DataProcessor):
         super(ZztjNERProcessor, self).__init__()
 
     # processor for the zztj dataset
-    def _read_zztj_file(self, file_name):
-        lines = []
-
-        def analyse(line, tag):
-            for child in tag.children:
-                if type(child) == Tag and child['class'][0] == 'ano':
-                    analyse(line, child)
-                else:
-                    line.append(str(child).strip())
-
-        with open(file_name, 'r', encoding='utf-8') as f:
-            raw_html = f.readline().strip("\"")
-        html = raw_html.replace(r'\/', '/').replace(r'\"', '\"')
-        # line = '<body>' + line + '</body>'
-        soup = BeautifulSoup(html, 'lxml')
-        soup = soup.p
-        components = []
-        analyse(components, soup)
-
-        components = list(filter(None, components))
-        processed_html = ''.join(components)
-        processed_html = processed_html.replace('、', '').replace('，', '')
-        processed_html = processed_html.replace('【', '').replace('】', '')
-
-        split_pattern = re.compile(r'\\n|。|」|「|：|；|！|？|『|』')
-        processed_html = re.split(split_pattern, processed_html)
-        processed_html = [i.strip() for i in processed_html]
-        processed_html = list(filter(None, processed_html))
-
-        for raw_line in processed_html:
-            soup = BeautifulSoup(raw_line, 'lxml')
-            soup = soup.body
-            if soup is None:
-                print(file_name)
-                print(raw_line)
-                continue
-            if soup.p is not None:
-                soup = soup.p
-            line = ''
-            label = []
-            for child in soup.children:
-                if type(child) == Tag:
-                    cls = child['class'][0]
-                    s = str(child.text)
-                    line += s
-                    label.extend([cls] * len(s))
-                    if cls not in self.get_labels():
-                        raise ValueError(cls)
-                else:
-                    s = str(child)
-                    line += s
-                    label.extend(['O'] * len(s))
-
-            assert len(line) == len(label)
-            lines.append((line, label))
-        return lines
+    @classmethod
+    def _read_tsv(cls, input_file, quotechar=None):
+        # reads a tab separated value file.
+        with open(input_file, "r", encoding='utf-8') as f:
+            reader = csv.reader(f, delimiter="|", quotechar=quotechar)
+            lines = []
+            for line in reader:
+                lines.append(line)
+            return lines
 
     def get_train_examples(self, data_dir):
         lines = []
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
             if num < 250:
-                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "train")
 
     def get_dev_examples(self, data_dir):
@@ -343,7 +296,7 @@ class ZztjNERProcessor(DataProcessor):
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
             if num >= 250:
-                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "dev")
 
     def get_test_examples(self, data_dir):
@@ -351,7 +304,7 @@ class ZztjNERProcessor(DataProcessor):
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
             if num >= 250:
-                lines.extend(self._read_zztj_file(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "test")
 
     def get_labels(self):
@@ -361,11 +314,10 @@ class ZztjNERProcessor(DataProcessor):
         # create examples for the training and dev sets
         examples = []
         for (i, line) in enumerate(lines):
-            if line == "\n":
-                continue
-            text_a = line[0]
+            text_a = line[0].strip()
             text_b = None
-            label = line[1]
+            label = line[1].strip()
+            label = label.split(" ")
             guid = "{}_{}".format("zztj.ner", str(i))
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
