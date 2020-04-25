@@ -157,7 +157,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
         def convert_label_to_id(label, label_map, empty_ids, char_mask):
             idx = 0
-            # [CLS] set for empty_ids
+            # [CLS] -> empty_ids
             label_ids = [label_map[empty_ids]]
             for i in range(1, len(char_mask)):
                 if char_mask[i]:

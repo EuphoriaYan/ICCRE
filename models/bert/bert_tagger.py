@@ -87,6 +87,14 @@ class BertTagger(nn.Module):
             else:
                 logits = logits.detach().cpu().numpy()
                 logits = np.reshape(logits, (-1, input_ids.shape[1], self.num_labels))
-                logits = np.argmax(logits, axis=-1)
-                logits = logits.tolist()
-                return logits
+                logits = np.argmax(logits, axis=-1)  # (batch_size, seq_length)
+                char_mask = char_mask.view(-1, input_ids.shape[1])
+                char_mask = char_mask.cpu().numpy()  # (batch_size, seq_length)
+                labels = []
+                for i in range(logits.shape[0]):
+                    l = logits[i]
+                    c = char_mask[i]
+                    l = l[c]
+                    l = l.tolist()
+                    labels.append(l)
+                return labels

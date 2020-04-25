@@ -34,7 +34,7 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
             if not output_file:
                 tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, char_mask, use_crf)
             logits = model_object(input_ids, segment_ids, input_mask,
-                                  labels=None, char_mask=None, use_crf=use_crf)
+                                  labels=None, char_mask=char_mask, use_crf=use_crf)
 
         """
         logits = logits.detach().cpu().numpy()
@@ -48,13 +48,23 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         """
 
         if not output_file:
-            label_ids = label_ids.tolist()
+            char_mask = char_mask.view(-1, input_ids.shape[1])
+            char_mask = char_mask.cpu().numpy()  # (batch_size, seq_length)
+            label_ids = label_ids.cpu().numpy()
+            labels = []
+            for i in range(char_mask.shape[0]):
+                l = label_ids[i]
+                c = char_mask[i]
+                l = l[c]
+                l = l.tolist()
+                labels.append(l)
+
             label_len = label_len.tolist()
 
             loss += tmp_eval_loss.mean().item()
 
             pred_lst += logits
-            gold_lst += label_ids
+            gold_lst += labels
             lst_len += label_len
             eval_steps += 1
         else:
@@ -71,7 +81,7 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         r = 0
         tot_r = 0
         for pred, gold, l in zip(pred_lst, gold_lst, lst_len):
-            for pd, gd in zip(pred[1:l + 1], gold[1:l + 1]):
+            for pd, gd in zip(pred[1:], gold[1:]):
                 if pd == 0:
                     tot_p += 1
                     if gd == 0:
