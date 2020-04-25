@@ -17,7 +17,7 @@ warmup=0.1
 checkpoint=1000
 output_model_name=zztj_ner_ft_traditional_bert_pytorch.bin
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
