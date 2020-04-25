@@ -165,7 +165,9 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
                     idx += 1
                 else:
                     label_ids.append(label_map[empty_ids])
-            assert len(label) == idx
+            assert len(label) == idx, 'label: ' + ' '.join(label) + '\n' + \
+                                      'char_mask: ' + ' '.join(char_mask) + '\n' + \
+                                      'text_a: ' + example.text_a + '\n'
             return label_ids
 
         if task_sign == "ner":
