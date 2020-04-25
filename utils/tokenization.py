@@ -99,11 +99,12 @@ class BertTokenizer(object):
     def tokenize(self, text):
         split_tokens = []
         char_masks = []
-        for token in self.basic_tokenizer.tokenize(text):
-            sub_token, sub_mask = self.wordpiece_tokenizer.tokenize(token)
-            assert len(sub_token) == len(sub_mask)
-            split_tokens.extend(sub_token)
-            char_masks.extend(sub_mask)
+        basic_tokens = self.basic_tokenizer.tokenize(text)
+        for token in basic_tokens:
+            if token not in self.vocab.keys():
+                token = "[UNK]"
+            split_tokens.append(token)
+            char_masks.append(True)
         return split_tokens, char_masks
 
     def convert_tokens_to_ids(self, tokens):
@@ -188,17 +189,18 @@ class BasicTokenizer(object):
         # and generally don't have any Chinese data in them (there are Chinese
         # characters in the vocabulary because Wikipedia does have some Chinese
         # words in the English Wikipedia.).
-        text = self._tokenize_chinese_chars(text)
-        orig_tokens = whitespace_tokenize(text)
+
+        # text = self._tokenize_chinese_chars(text)
+        # orig_tokens = whitespace_tokenize(text)
         split_tokens = []
-        for token in orig_tokens:
+        for token in text:
             if self.do_lower_case and token not in self.never_split:
                 token = token.lower()
                 token = self._run_strip_accents(token)
             split_tokens.extend(self._run_split_on_punc(token))
 
-        output_tokens = whitespace_tokenize(" ".join(split_tokens))
-        return output_tokens
+        # output_tokens = whitespace_tokenize(" ".join(split_tokens))
+        return split_tokens
 
     def _run_strip_accents(self, text):
         """Strips accents from a piece of text."""
