@@ -12,12 +12,12 @@ train_batch=32
 dev_batch=32
 test_batch=32
 learning_rate=5e-5
-num_train_epochs=30
+num_train_epochs=10
 warmup=0.1
 checkpoint=1000
 output_model_name=shiji_cws_jt_wcm_pytorch.bin
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \

@@ -3,7 +3,7 @@
 data_dir=dataset/ner/zztj
 output_dir=output
 config_path=configs/traditional_bert.json
-bert_model=traditional_chinese_jt
+bert_model=traditional_chinese_ft
 
 data_sign=zztj_ner
 task_name=ner

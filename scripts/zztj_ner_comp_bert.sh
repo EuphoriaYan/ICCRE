@@ -3,7 +3,7 @@
 data_dir=dataset/ner/zztj
 output_dir=output
 config_path=configs/wcm_bert.json
-bert_model=chinese_wcm_jt_pytorch
+bert_model=chinese_wcm_ft_pytorch
 
 data_sign=zztj_ner
 task_name=ner
