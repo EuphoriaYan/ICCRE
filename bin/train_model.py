@@ -57,8 +57,8 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
 
         for step, batch in enumerate(train_dataloader):
             batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids, label_len = batch
-            loss = model(input_ids, segment_ids, input_mask, label_ids, config.use_crf)
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+            loss = model(input_ids, segment_ids, input_mask, label_ids, char_mask, config.use_crf)
             if n_gpu > 1:
                 loss = loss.mean()
 
@@ -163,8 +163,8 @@ def ner_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
 
         for step, batch in enumerate(train_dataloader):
             batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids, label_len = batch
-            loss = model(input_ids, segment_ids, input_mask, label_ids, config.use_crf)
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+            loss = model(input_ids, segment_ids, input_mask, label_ids, char_mask, config.use_crf)
             if n_gpu > 1:
                 loss = loss.mean()
 
@@ -264,8 +264,8 @@ def pos_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
 
         for step, batch in enumerate(train_dataloader):
             batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids, label_len = batch
-            loss = model(input_ids, segment_ids, input_mask, label_ids, config.use_crf)
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+            loss = model(input_ids, segment_ids, input_mask, label_ids, char_mask, config.use_crf)
             if n_gpu > 1:
                 loss = loss.mean()
 
@@ -355,8 +355,8 @@ def cws_pos_train(model, optimizer, train_dataloader, dev_dataloader, test_datal
 
         for step, batch in enumerate(train_dataloader):
             batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids, label_len = batch
-            loss = model(input_ids, segment_ids, input_mask, label_ids, config.use_crf)
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+            loss = model(input_ids, segment_ids, input_mask, label_ids, char_mask, config.use_crf)
             if n_gpu > 1:
                 loss = loss.mean()
 

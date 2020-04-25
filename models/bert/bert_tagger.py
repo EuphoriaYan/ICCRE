@@ -57,7 +57,7 @@ class BertTagger(nn.Module):
             self.crf = CRF(num_labels, batch_first=True)
 
     # (input_ids, segment_ids, input_mask, label_ids)
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, use_crf=False):
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, char_mask=None, use_crf=False):
         last_bert_layer, pooled_output = self.bert(input_ids, token_type_ids, attention_mask,
                                                    output_all_encoded_layers=False)
         last_bert_layer = last_bert_layer.view(-1, self.hidden_size)
@@ -71,8 +71,16 @@ class BertTagger(nn.Module):
                 return -loss
             else:
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-                return loss
+                if attention_mask is not None:
+                    active_loss = (attention_mask.view(-1) == 1)
+                    if char_mask is not None:
+                        active_loss &= char_mask.view(-1)
+                    active_logits = logits.view(-1, self.num_labels)[active_loss]
+                    active_label = labels.view(-1)[active_loss]
+                    loss = loss_fct(active_logits, active_label)
+                    return loss
+                else:
+                    return loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
         else:
             if use_crf:
                 return self.crf.decode(logits.view(-1, input_ids.shape[1], self.num_labels), attention_mask.byte())

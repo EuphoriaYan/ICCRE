@@ -53,11 +53,12 @@ class InputExample(object):
 
 class InputFeature(object):
     # a single set of features of data
-    def __init__(self, input_ids, input_mask, segment_ids, label_id, label_len=0):
+    def __init__(self, input_ids, input_mask, segment_ids, label_id, char_mask, label_len=0):
         self.input_ids = input_ids
         self.input_mask = input_mask
         self.segment_ids = segment_ids
         self.label_id = label_id
+        self.char_mask = char_mask
         self.label_len = label_len
 
 
@@ -118,15 +119,13 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
                     char_mask_a = char_mask_a[:(max_seq_length - 2)]
 
         tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        char_mask = None
-        if char_mask_a is not None:
-            char_mask = [0] + char_mask_a + [0]
+        char_mask = [True] + char_mask_a + [False]
         segment_ids = [0] * len(tokens)
 
         if tokens_b:
             tokens += tokens_b + ["[SEP]"]
             if char_mask_b is not None:
-                char_mask += char_mask_b + [0]
+                char_mask += char_mask_b + [False]
             segment_ids += [1] * (len(tokens_b) + 1)
 
         input_ids = tokenizer.convert_tokens_to_ids(tokens)
@@ -137,40 +136,50 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
         # zero padding up to the sequence length
         padding = [0] * (max_seq_length - len(input_ids))
+        char_padding = [False] * (max_seq_length - len(input_ids))
         input_ids += padding
         input_mask += padding
         segment_ids += padding
+        char_mask += char_padding
 
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
+        assert len(char_mask) == max_seq_length
 
         if len(example.label) > max_seq_length - 2:
             example.label = example.label[: (max_seq_length - 2)]
 
         # Check the output should equal number of char.
-        if char_mask is not None:
-            label_len = sum(char_mask)
-            if len(example.label) > label_len:
-                example.label = example.label[: label_len]
+        label_len = len(list(filter(None, char_mask)))
+        if len(example.label) > label_len:
+            example.label = example.label[: label_len]
+
+        def convert_label_to_id(label, label_map, empty_ids, char_mask):
+            idx = 0
+            # [CLS] set for empty_ids
+            label_ids = [label_map[empty_ids]]
+            for i in range(1, len(char_mask)):
+                if char_mask[i]:
+                    label_ids.append(label_map[label[idx]])
+                    idx += 1
+                else:
+                    label_ids.append(label_map[empty_ids])
+            assert len(label) == idx
+            return label_ids
 
         if task_sign == "ner":
-            label_id = [label_map["O"]] + [label_map[tmp] for tmp in example.label] + [label_map["O"]]
-            label_id += (len(input_ids) - len(label_id)) * [label_map["O"]]
+            label_id = convert_label_to_id(example.label, label_map, "O", char_mask)
         elif task_sign == "pos":
-            label_id = [label_map["B-o"]] + [label_map[tmp] for tmp in example.label]
-            label_id += (len(input_ids) - len(label_id)) * [label_map["B-o"]]
+            label_id = convert_label_to_id(example.label, label_map, "B-o", char_mask)
         elif task_sign == "cws":
-            label_id = [label_map["S-SEG"]] + [label_map[tmp] for tmp in example.label]
-            label_id += (len(input_ids) - len(label_id)) * [label_map["S-SEG"]]
+            label_id = convert_label_to_id(example.label, label_map, "S-SEG", char_mask)
         elif task_sign == "BIO_cws":
-            label_id = [label_map["B"]] + [label_map[tmp] for tmp in example.label]
-            label_id += (len(input_ids) - len(label_id)) * [label_map["B"]]
+            label_id = convert_label_to_id(example.label, label_map, "B", char_mask)
         elif task_sign == "clf":
             label_id = label_map[example.label]
         elif task_sign == "cws+pos":
-            label_id = [label_map["B-o"]] + [label_map[tmp] for tmp in example.label] + [label_map["B-o"]]
-            label_id += (len(input_ids) - len(label_id)) * [label_map["B-o"]]
+            label_id = convert_label_to_id(example.label, label_map, "B-o", char_mask)
         else:
             raise ValueError("task_sign not found: %s." % task_sign)
 
@@ -178,7 +187,8 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
                                      input_mask=input_mask,
                                      segment_ids=segment_ids,
                                      label_id=label_id,
-                                     label_len=len(example.label)))
+                                     char_mask=char_mask,
+                                     label_len=label_len))
 
     return features
 

@@ -26,16 +26,15 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
     lst_len = []
     eval_steps = 0
 
-    for input_ids, input_mask, segment_ids, label_ids, label_len in eval_dataloader:
-        input_ids = input_ids.to(device)
-        input_mask = input_mask.to(device)
-        segment_ids = segment_ids.to(device)
-        label_ids = label_ids.to(device)
+    for batch in eval_dataloader:
+        batch = (t.to(device) for t in batch)
+        input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
 
         with torch.no_grad():
             if not output_file:
-                tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, use_crf)
-            logits = model_object(input_ids, segment_ids, input_mask, use_crf=use_crf)
+                tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids, char_mask, use_crf)
+            logits = model_object(input_ids, segment_ids, input_mask,
+                                  labels=None, char_mask=None, use_crf=use_crf)
 
         """
         logits = logits.detach().cpu().numpy()

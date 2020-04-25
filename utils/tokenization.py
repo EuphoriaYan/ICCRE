@@ -98,10 +98,13 @@ class BertTokenizer(object):
 
     def tokenize(self, text):
         split_tokens = []
+        char_masks = []
         for token in self.basic_tokenizer.tokenize(text):
-            for sub_token in self.wordpiece_tokenizer.tokenize(token):
-                split_tokens.append(sub_token)
-        return split_tokens, None
+            sub_token, sub_mask = self.wordpiece_tokenizer.tokenize(token)
+            assert len(sub_token) == len(sub_mask)
+            split_tokens.extend(sub_token)
+            char_masks.extend(sub_mask)
+        return split_tokens, char_masks
 
     def convert_tokens_to_ids(self, tokens):
         """Converts a sequence of tokens into ids using the vocab."""
@@ -306,6 +309,7 @@ class WordpieceTokenizer(object):
         """
 
         output_tokens = []
+        mask = []
         for token in whitespace_tokenize(text):
             chars = list(token)
             if len(chars) > self.max_input_chars_per_word:
@@ -315,6 +319,7 @@ class WordpieceTokenizer(object):
             is_bad = False
             start = 0
             sub_tokens = []
+            sub_mask = []
             while start < len(chars):
                 end = len(chars)
                 cur_substr = None
@@ -330,13 +335,19 @@ class WordpieceTokenizer(object):
                     is_bad = True
                     break
                 sub_tokens.append(cur_substr)
+                if start == 0:
+                    sub_mask.append(True)
+                else:
+                    sub_mask.append(False)
                 start = end
 
             if is_bad:
                 output_tokens.append(self.unk_token)
+                mask.append(True)
             else:
                 output_tokens.extend(sub_tokens)
-        return output_tokens
+                mask.extend(sub_mask)
+        return output_tokens, mask
 
 
 def _is_whitespace(char):
@@ -446,7 +457,7 @@ class CompPieceTokenizer(object):
     For example:
       input = "园"
       output1 = ["园", "##⿴", "##囗", "##元"]
-      output2 = [1, 0, 0, 0]
+      output2 = [True, False, False, False]
 
     Args:
       text: A single token or whitespace separated tokens. This should have
@@ -469,12 +480,12 @@ class CompPieceTokenizer(object):
                 char = chars[0]
                 if _is_chinese_char(char):
                     output_tokens.append(char)
-                    mask.append(1)
+                    mask.append(True)
                     comp_list = self.comp_dict.get(char)
                     if comp_list:
                         for comp in comp_list:
                             output_tokens.append("##" + comp)
-                            mask.append(0)
+                            mask.append(False)
                     continue
 
             is_bad = False
@@ -497,14 +508,14 @@ class CompPieceTokenizer(object):
                     break
                 sub_tokens.append(cur_substr)
                 if start == 0:
-                    sub_mask.append(1)
+                    sub_mask.append(True)
                 else:
-                    sub_mask.append(0)
+                    sub_mask.append(False)
                 start = end
 
             if is_bad:
                 output_tokens.append(self.unk_token)
-                mask.append(1)
+                mask.append(True)
             else:
                 output_tokens.extend(sub_tokens)
                 mask.extend(sub_mask)

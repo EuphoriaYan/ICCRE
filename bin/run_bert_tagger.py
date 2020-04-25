@@ -132,8 +132,9 @@ def load_data(config):
         input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
         segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
         label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+        char_mask = torch.tensor([f.char_mask for f in features], dtype=torch.bool)
         label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
-        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, char_mask, label_len)
         # sampler = DistributedSampler(data)
         sampler = RandomSampler(data)
         return data, sampler
