@@ -172,7 +172,10 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
             return label_ids
 
         if task_sign == "ner":
-            label_id = convert_label_to_id(example.label, label_map, "O", char_mask)
+            try:
+                label_id = convert_label_to_id(example.label, label_map, "O", char_mask)
+            except ValueError:
+                print(example.text_a)
         elif task_sign == "pos":
             label_id = convert_label_to_id(example.label, label_map, "B-o", char_mask)
         elif task_sign == "cws":
