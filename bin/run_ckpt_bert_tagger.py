@@ -124,8 +124,9 @@ def load_data(config):
         input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
         segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
         label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+        char_mask = torch.tensor([f.char_mask for f in features], dtype=torch.bool)
         label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
-        return input_ids, input_mask, segment_ids, label_ids, label_len
+        return input_ids, input_mask, segment_ids, label_ids, char_mask, label_len
         # data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
         # sampler = DistributedSampler(data)
         # sampler_list = {
@@ -142,9 +143,9 @@ def load_data(config):
     test_data_list = []
     # test_sampler_list = []
     for test_examples in test_examples_list:
-        input_ids, input_mask, segment_ids, label_ids, label_len = generate_data(test_examples)
+        input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = generate_data(test_examples)
         # test_data, test_sampler = generate_data(test_examples, 'sequential')
-        test_data_list.append([input_ids, input_mask, segment_ids, label_ids, label_len])
+        test_data_list.append([input_ids, input_mask, segment_ids, label_ids, char_mask, label_len])
         # test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
         # test_dataloader_list.append(test_dataloader)
 
