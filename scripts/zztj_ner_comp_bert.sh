@@ -14,7 +14,7 @@ test_batch=32
 learning_rate=5e-5
 num_train_epochs=4
 warmup=0.1
-checkpoint=1000
+checkpoint=5000
 output_model_name=zztj_ner_ft_traditional_chinese_pytorch.bin
 
 export CUDA_VISIBLE_DEVICES=3
