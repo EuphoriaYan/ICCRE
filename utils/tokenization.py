@@ -101,10 +101,10 @@ class BertTokenizer(object):
         char_masks = []
         basic_tokens = self.basic_tokenizer.tokenize(text)
         for token in basic_tokens:
-            if token not in self.vocab.keys():
-                token = "[UNK]"
-            split_tokens.append(token)
-            char_masks.append(True)
+            sub_token, sub_mask = self.wordpiece_tokenizer.tokenize(token)
+            assert len(sub_token) == len(sub_mask)
+            split_tokens.extend(sub_token)
+            char_masks.extend(sub_mask)
         return split_tokens, char_masks
 
     def convert_tokens_to_ids(self, tokens):
@@ -190,10 +190,10 @@ class BasicTokenizer(object):
         # characters in the vocabulary because Wikipedia does have some Chinese
         # words in the English Wikipedia.).
 
-        # text = self._tokenize_chinese_chars(text)
-        # orig_tokens = whitespace_tokenize(text)
+        text = self._tokenize_chinese_chars(text)
+        orig_tokens = whitespace_tokenize(text)
         split_tokens = []
-        for token in text:
+        for token in orig_tokens:
             if self.do_lower_case and token not in self.never_split:
                 token = token.lower()
                 token = self._run_strip_accents(token)
@@ -472,7 +472,7 @@ class CompPieceTokenizer(object):
 
         output_tokens = []
         mask = []
-        for token in text:
+        for token in whitespace_tokenize(text):
             chars = list(token)
             if len(chars) > self.max_input_chars_per_word:
                 output_tokens.append(self.unk_token)
