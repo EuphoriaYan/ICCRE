@@ -472,7 +472,7 @@ class CompPieceTokenizer(object):
 
         output_tokens = []
         mask = []
-        for token in whitespace_tokenize(text):
+        for token in text:
             chars = list(token)
             if len(chars) > self.max_input_chars_per_word:
                 output_tokens.append(self.unk_token)
@@ -522,3 +522,9 @@ class CompPieceTokenizer(object):
                 output_tokens.extend(sub_tokens)
                 mask.extend(sub_mask)
         return output_tokens, mask
+
+
+if __name__ == '__main__':
+    tokenizer = CompTokenizer('chinese_wcm_jt_pytorch')
+    s = '見二百七十七卷唐 明宗 長興二年'
+    s = tokenizer.tokenize(s)
