@@ -271,6 +271,7 @@ class ZztjNERProcessor(DataProcessor):
 
     def __init__(self):
         super(ZztjNERProcessor, self).__init__()
+        self.cut = 280
 
     # processor for the zztj dataset
     @classmethod
@@ -287,7 +288,7 @@ class ZztjNERProcessor(DataProcessor):
         lines = []
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
-            if num < 250:
+            if num < self.cut:
                 lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "train")
 
@@ -295,7 +296,7 @@ class ZztjNERProcessor(DataProcessor):
         lines = []
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
-            if num >= 250:
+            if num >= self.cut:
                 lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "dev")
 
@@ -303,12 +304,14 @@ class ZztjNERProcessor(DataProcessor):
         lines = []
         for train_file in os.listdir(data_dir):
             num = int(train_file[:-4])
-            if num >= 250:
+            if num >= self.cut:
                 lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
         return self._create_examples(lines, "test")
 
     def get_labels(self):
-        return ['O', 'liter', 'peop', 'tpn', 'date', 'offi']
+        return ['O',
+                'B-liter', 'B-peop', 'B-tpn', 'B-date', 'B-offi',
+                'I-liter', 'I-peop', 'I-tpn', 'I-date', 'I-offi']
 
     def _create_examples(self, lines, set_type):
         # create examples for the training and dev sets
