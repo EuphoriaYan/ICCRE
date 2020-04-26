@@ -202,25 +202,13 @@ def ner_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
                         dev_best_precision = dev_prec
                         dev_best_recall = dev_rec
                         dev_best_f1 = dev_f1
-                        test_loss, test_prec, test_rec, test_f1 = eval_checkpoint(model, test_dataloader, device,
-                                                                                  label_list, config.task_name,
-                                                                                  use_crf=config.use_crf)
-                        print("......" * 10)
-                        print("TEST: loss, acc, precision, recall, f1")
-                        print(test_loss, test_prec, test_rec, test_f1)
 
-                        if test_f1 > test_best_f1:
-                            test_best_loss = test_loss
-                            test_best_precision = test_prec
-                            test_best_recall = test_rec
-                            test_best_f1 = test_f1
-
-                            if config.export_model:
-                                # export a better model
-                                model_to_save = model.module if hasattr(model, "module") else model
-                                output_model_file = os.path.join(config.output_dir, config.output_model_name)
-                                torch.save(model_to_save.state_dict(), output_model_file)
-                            # end of if do_eval
+                        if config.export_model:
+                            # export a better model
+                            model_to_save = model.module if hasattr(model, "module") else model
+                            output_model_file = os.path.join(config.output_dir, config.output_model_name)
+                            torch.save(model_to_save.state_dict(), output_model_file)
+                # end of if do_eval
 
                 print("-*-" * 15, flush=True)
                 model.train()
@@ -236,8 +224,6 @@ def ner_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
     print("=&=" * 15)
     print("DEV: current best loss, acc, p, r, f1 ")
     print(dev_best_loss, dev_best_precision, dev_best_recall, dev_best_f1)
-    print("TEST: current best loss, acc, p, r, f1 ")
-    print(test_best_loss, test_best_precision, test_best_recall, test_best_f1)
     print("=&=" * 15)
 
 
