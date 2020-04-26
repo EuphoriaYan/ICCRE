@@ -151,7 +151,8 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
             example.label = example.label[: (max_seq_length - 2)]
 
         # Check the output should equal number of char.
-        label_len = len(list(filter(None, char_mask)))
+        # [CLS] counts 1.
+        label_len = len(list(filter(None, char_mask))) - 1
         if len(example.label) > label_len:
             example.label = example.label[: label_len]
 
