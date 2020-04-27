@@ -184,7 +184,17 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         elif task_sign == "BIO_cws":
             label_id = convert_label_to_id(example.label, label_map, "B", char_mask)
         elif task_sign == "clf":
-            label_id = label_map[example.label]
+            if len(example.label) != 1:
+                print(example.guid)
+                print(example.text_a)
+                print(example.label)
+                raise ValueError
+            label_id = label_map.get(example.label[0])
+            if label_id is None:
+                print(example.guid)
+                print(example.text_a)
+                print(example.label)
+                raise ValueError
         elif task_sign == "cws+pos":
             label_id = convert_label_to_id(example.label, label_map, "B-o", char_mask)
         else:

@@ -74,14 +74,7 @@ class BertClassifier(nn.Module):
 
         if labels is not None:
             loss_fct = CrossEntropyLoss()
-            if input_mask is not None:
-                # print("-*-"*10)
-                # print("start using the mask of the sent")
-                # masked_logits.masked_scatter_(input_mask, logits)
-                masked_logits = torch.masked_select(logits, input_mask)
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-            else:
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss
         else:
             return logits

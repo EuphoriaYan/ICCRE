@@ -1,5 +1,5 @@
-# encoding: utf-8
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -8,11 +8,11 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-server_root_path = '/yjs/euphoria/ICCRE/'
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+import math
+import time
 
 from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam
@@ -21,7 +21,7 @@ from dataset_readers.bert_sent_pair import *
 from dataset_readers.bert_single_sent import *
 from models.bert.bert_classifier import BertClassifier
 from dataset_readers.bert_data_utils import convert_examples_to_features
-from bin.train_model import train
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def args_parser():
     # required parameters
     parser.add_argument("--config_path", default="configs/bert.json", type=str)
     parser.add_argument("--data_dir", default=None, type=str, help="the input data dir")
-    parser.add_argument("--data_sign", type=str, default="shijin_cls")
+    parser.add_argument("--data_sign", type=str, default="dzg_clf")
     parser.add_argument("--bert_model", default=None, type=str, required=True,
                         help="bert-large-uncased, bert-base-cased, bert-large-cased")
     parser.add_argument("--task_name", default=None, type=str)
@@ -44,10 +44,9 @@ def args_parser():
                         help="Whether to run training")
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval")
-    parser.add_argument("--use_server", action="store_true")
+    parser.add_argument("--use_comp", action="store_true")
 
     # # other parameters
-    parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--cuda", type=bool, default=True)
     parser.add_argument("--use_multi_gpu", type=bool, default=False)
     parser.add_argument("--max_seq_length", default=128,
@@ -86,73 +85,80 @@ def load_data(config):
     # data_processor = MsraNerProcessor()
 
     data_processor_list = {
-        "zangls": MsraNERProcessor,
+        "chn_sent": ChnSentiCorpProcessor,
+        "ifeng_clf": ifengProcessor,
+        "dzg_clf": DzgProcessor,
     }
 
-    if config.data_sign == "nlpcc-dbqa":
-        data_processor = TextProcessor()
-    else:
-        raise ValueError
+    if config.data_sign not in data_processor_list:
+        raise ValueError("Data_sign not found: %s" % config.data_sign)
+
+    data_processor = data_processor_list[config.data_sign]()
 
     label_list = data_processor.get_labels()
-    tokenizer = BertTokenizer.from_pretrained(config.bert_model, do_lower_case=True)
+    if config.use_comp:
+        tokenizer = CompTokenizer(config.bert_model)
+    else:
+        tokenizer = BertTokenizer.from_pretrained(config.bert_model, do_lower_case=True)
 
     # load data exampels
     train_examples = data_processor.get_train_examples(config.data_dir)
     dev_examples = data_processor.get_dev_examples(config.data_dir)
     test_examples = data_processor.get_test_examples(config.data_dir)
 
-    # convert data example into featrues
-    train_features = convert_examples_to_features(train_examples, label_list, config.max_seq_length, tokenizer,
-                                                  task_sign=config.task_name)
-    train_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-    train_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-    train_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
-    train_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
-    train_data = TensorDataset(train_input_ids, train_input_mask, train_segment_ids, train_label_ids)
-    # train_sampler = DistributedSampler(train_data)
-    train_sampler = RandomSampler(train_data)
-
-    dev_features = convert_examples_to_features(dev_examples, label_list, config.max_seq_length, tokenizer,
+    def generate_data(examples, set_type="train"):
+        print(set_type + " examples")
+        for i in range(min(len(examples), 3)):
+            print(examples[i])
+        sys.stdout.flush()
+        features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
                                                 task_sign=config.task_name)
-    dev_input_ids = torch.tensor([f.input_ids for f in dev_features], dtype=torch.long)
-    dev_input_mask = torch.tensor([f.input_mask for f in dev_features], dtype=torch.long)
-    dev_segment_ids = torch.tensor([f.segment_ids for f in dev_features], dtype=torch.long)
-    dev_label_ids = torch.tensor([f.label_id for f in dev_features], dtype=torch.long)
-    dev_data = TensorDataset(dev_input_ids, dev_input_mask, dev_segment_ids, dev_label_ids)
+        input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+        char_mask = torch.tensor([f.char_mask for f in features], dtype=torch.bool)
+        label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
+        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, char_mask, label_len)
+        # sampler = DistributedSampler(data)
+        sampler = RandomSampler(data)
+        return data, sampler
 
-    dev_sampler = RandomSampler(dev_data)
+    # convert data example into featrues
+    train_data, train_sampler = generate_data(train_examples, "train")
+    dev_data, dev_sampler = generate_data(dev_examples, "dev")
+    test_data, test_sampler = generate_data(test_examples, "test")
 
-    test_features = convert_examples_to_features(test_examples, label_list, config.max_seq_length, tokenizer,
-                                                 task_sign=config.task_name)
-    test_input_ids = torch.tensor([f.input_ids for f in test_features], dtype=torch.long)
-    test_input_mask = torch.tensor([f.input_mask for f in test_features], dtype=torch.long)
-    test_segment_ids = torch.tensor([f.segment_ids for f in test_features], dtype=torch.long)
-    test_label_ids = torch.tensor([f.label_id for f in test_features], dtype=torch.long)
-    test_data = TensorDataset(test_input_ids, test_input_mask, test_segment_ids, test_label_ids)
-    # test_sampler = DistributedSampler(test_data)
-    test_sampler = RandomSampler(test_data)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.train_batch_size)
 
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, \
-                                  batch_size=config.train_batch_size, num_workers=config.nworkers)
+    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.dev_batch_size)
 
-    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, \
-                                batch_size=config.dev_batch_size, num_workers=config.nworkers)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
 
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, \
-                                 batch_size=config.test_batch_size, num_workers=config.nworkers)
+    num_train_steps = int(math.ceil(len(train_examples) / config.train_batch_size) * config.num_train_epochs)
+    print("Train_examples: ", len(train_examples))
+    print("Dev_examples: ", len(dev_examples))
+    print("Test_examples: ", len(test_examples))
+    print("Total train steps: ", num_train_steps)
+    sys.stdout.flush()
 
-    num_train_steps = int(len(train_examples) / config.train_batch_size * 5)
     return train_dataloader, dev_dataloader, test_dataloader, num_train_steps, label_list
 
 
 def load_model(config, num_train_steps, label_list):
-    # device = torch.device(torch.cuda.is_available())
-    device = torch.device("cuda")
-    n_gpu = torch.cuda.device_count()
+
+    if torch.cuda.is_available():
+        if config.use_multi_gpu:
+            n_gpu = torch.cuda.device_count()
+        else:
+            n_gpu = 1
+        device = torch.device("cuda")
+
+    else:
+        device = torch.device("cpu")
+        n_gpu = 0
 
     model = BertClassifier(config, num_labels=len(label_list))
-
     model.to(device)
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
@@ -172,34 +178,30 @@ def load_model(config, num_train_steps, label_list):
     return model, optimizer, device, n_gpu
 
 
-def train(model, optimizer, train_dataloader, dev_dataloader, test_dataloader, config, \
-          device, n_gpu, label_list):
+def train(model, optimizer, train_dataloader, dev_dataloader, test_dataloader,
+          config, device, n_gpu, label_list):
     global_step = 0
     nb_tr_steps = 0
     tr_loss = 0
 
     dev_best_acc = 0
-    dev_best_precision = 0
-    dev_best_recall = 0
     dev_best_f1 = 0
     dev_best_loss = 10000000000000
 
-    test_best_acc = 0
-    test_best_precision = 0
-    test_best_recall = 0
-    test_best_f1 = 0
-    test_best_loss = 1000000000000000
-
     model.train()
+    optimizer.zero_grad()
+    train_start = time.time()
 
     for idx in range(int(config.num_train_epochs)):
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
-        print("#######" * 10)
-        print("EPOCH: ", str(idx))
-        for step, batch in tqdm(enumerate(train_dataloader)):
+        print("#######" * 7)
+        epoch_start = time.time()
+        print("EPOCH: %s/%s" % (str(idx + 1), config.num_train_epochs))
+
+        for step, batch in enumerate(train_dataloader):
             batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids = batch
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
             loss = model(input_ids, segment_ids, input_mask, label_ids)
             if n_gpu > 1:
                 loss = loss.mean()
@@ -219,65 +221,45 @@ def train(model, optimizer, train_dataloader, dev_dataloader, test_dataloader, c
             if (nb_tr_steps+1) % config.checkpoint == 0:
                 print("-*-" * 15)
                 print("current training loss is : ")
-                print("classification loss")
                 print(loss.item())
-                tmp_dev_loss, tmp_dev_acc, tmp_dev_f1 = eval_checkpoint(model,
-                                                                        dev_dataloader,
-                                                                        config, device,
-                                                                        n_gpu, label_list,
-                                                                        eval_sign="dev")
+
+                dev_loss, dev_acc, dev_f1 = eval_checkpoint(model,
+                                                            dev_dataloader,
+                                                            config, device,
+                                                            n_gpu, label_list,
+                                                            eval_sign="dev")
                 print("......" * 10)
                 print("DEV: loss, acc, f1")
-                print(tmp_dev_loss, tmp_dev_acc, tmp_dev_f1)
+                print(dev_loss, dev_acc, dev_f1)
 
-                if tmp_dev_f1 > dev_best_f1 or tmp_dev_acc > dev_best_acc:
-                    dev_best_acc = tmp_dev_acc
-                    dev_best_loss = tmp_dev_loss
-                    # dev_best_precision = tmp_dev_prec
-                    # dev_best_recall = tmp_dev_rec
-                    dev_best_f1 = tmp_dev_f1
+                if dev_f1 > dev_best_f1 or dev_acc > dev_best_acc:
+                    dev_best_acc = dev_acc
+                    dev_best_loss = dev_loss
+                    dev_best_f1 = dev_f1
 
-                    tmp_test_loss, tmp_test_acc, tmp_test_f1 = eval_checkpoint(model,
-                                                                               test_dataloader,
-                                                                               config,
-                                                                               device,
-                                                                               n_gpu,
-                                                                               label_list,
-                                                                               eval_sign="test")
-                    print("......" * 10)
-                    print("TEST: loss, acc, f1")
-                    print(tmp_test_loss, tmp_test_acc, tmp_test_f1)
-
-                    if tmp_test_f1 > test_best_f1 or tmp_test_acc > test_best_acc:
-                        test_best_acc = tmp_test_acc
-                        test_best_loss = tmp_test_loss
-                        # test_best_precision = tmp_test_prec
-                        # test_best_recall = tmp_test_rec
-                        test_best_f1 = tmp_test_f1
-
-                        # export model
-                        if config.export_model:
-                            model_to_save = model.module if hasattr(model, "module") else model
-                            output_model_file = os.path.join(config.output_dir, config.output_model_name)
-                            torch.save(model_to_save.state_dict(), output_model_file)
+                    # export model
+                    if config.export_model:
+                        model_to_save = model.module if hasattr(model, "module") else model
+                        output_model_file = os.path.join(config.output_dir, config.output_model_name)
+                        torch.save(model_to_save.state_dict(), output_model_file)
 
                 print("-*-" * 15)
+                model.train()
+                # end of checkpoint
+        epoch_finish = time.time()
+        print("EPOCH: %d; TIME: %.2fs" % (idx, epoch_finish - epoch_start), flush=True)
+        # end of epoch
 
-    # export a trained mdoel
-    model_to_save = model
-    output_model_file = os.path.join(config.output_dir, "bert_model.bin")
-    if config.export_model == "True":
-        torch.save(model_to_save.state_dict(), output_model_file)
+    train_finish = time.time()
+    print("TOTAL_TIME: %.2fs" % (train_finish - train_start))
 
     print("=&=" * 15)
-    print("DEV: current best precision, recall, f1, acc, loss ")
-    print(dev_best_precision, dev_best_recall, dev_best_f1, dev_best_acc, dev_best_loss)
-    print("TEST: current best precision, recall, f1, acc, loss ")
-    print(test_best_precision, test_best_recall, test_best_f1, test_best_acc, test_best_loss)
+    print("DEV: current best f1, acc, loss ")
+    print(dev_best_f1, dev_best_acc, dev_best_loss)
     print("=&=" * 15)
 
 
-def eval_checkpoint(model_object, eval_dataloader, config, \
+def eval_checkpoint(model_object, eval_dataloader, config,
                     device, n_gpu, label_list, eval_sign="dev"):
     # input_dataloader type can only be one of dev_dataloader, test_dataloader
     model_object.eval()
@@ -285,13 +267,14 @@ def eval_checkpoint(model_object, eval_dataloader, config, \
     idx2label = {i: label for i, label in enumerate(label_list)}
 
     eval_loss = 0
-    eval_accuracy = []
-    eval_f1 = []
-    eval_recall = []
-    eval_precision = []
     eval_steps = 0
+    gold_all = []
+    pred_all = []
 
-    for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader):
+    for batch in eval_dataloader:
+        batch = tuple(t.to(device) for t in batch)
+        input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+
         input_ids = input_ids.to(device)
         input_mask = input_mask.to(device)
         segment_ids = segment_ids.to(device)
@@ -301,55 +284,38 @@ def eval_checkpoint(model_object, eval_dataloader, config, \
             tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids)
             logits = model_object(input_ids, segment_ids, input_mask)
 
-        logits = logits.detach().cpu().numpy()
-        # logits = np.argmax(logits, axis=-1)
-        label_ids = label_ids.to("cpu").numpy()
-        input_mask = input_mask.to("cpu").numpy()
-        # reshape_lst = label_ids.shape
-        # logits = np.reshape(logits, (reshape_lst[0], reshape_lst[1], -1))
-        logits = np.argmax(logits, axis=-1)
-
-        # logits = logits.tolist()
-        # logits = [[idx2label[tmp] for tmp in logit_item] for logit_item in logits]
-        # label_ids = label_ids.tolist()
-        input_mask = input_mask.tolist()
-        # label_ids = [[idx2label[tmp] for tmp in label_item] for label_item in label_ids]
-
-        # print("check the format and content of labels and logtis")
-        # print(logits)
-        # print(label_ids)
-        # exit()
-        # tmp_accuracy = cal_accuracy(logits, label_ids, label_list)
-        # eval_accuracy.append(tmp_accuracy)
-
         eval_loss += tmp_eval_loss.mean().item()
 
-        # tmp_precision, tmp_recall, tmp_f1 = cal_ner_f1(logits, label_ids, label_list)
-        metric = acc_and_f1(preds=logits, labels=label_ids)
+        logits = logits.detach().cpu().numpy()
+        label_ids = label_ids.to("cpu").numpy()
+        logits = np.argmax(logits, axis=-1)
 
-        # print("check the labels and output")
-        # print(logits[0])
-        # print(label_ids[0])
-        eval_accuracy.append(metric['acc'])
-        # eval_precision.append(tmp_precision)
-        # eval_recall.append(tmp_recall)
-        eval_f1.append(metric['f1'])
-        eval_steps += 1
+        logits = logits.tolist()
+        label_ids = label_ids.tolist()
+        pred_all.extend(logits)
+        gold_all.extend(label_ids)
+
+    acc = accuracy_score(gold_all, pred_all)
+    f1 = f1_score(gold_all, pred_all, average='macro')
 
     average_loss = round(eval_loss / eval_steps, 4)
-    eval_f1 = round(sum(eval_f1) / (len(eval_f1)), 4)
-    # eval_precision = round(sum(eval_precision) / len(eval_precision), 4)
-    # eval_recall = round(sum(eval_recall) / len(eval_recall), 4)
-    eval_accuracy = round(sum(eval_accuracy) / len(eval_accuracy), 4)
+    eval_acc = round(acc, 4)
+    eval_f1 = round(f1, 4)
 
-    return average_loss, eval_accuracy, eval_f1  # eval_precision, eval_recall, eval_f1
+    return average_loss, eval_acc, eval_f1  # eval_precision, eval_recall, eval_f1
 
 
 def merge_config(args_config):
+    """
+    if args_config.use_server:
+        args_config.config_path = server_root_path + args_config.config_path
+        args_config.bert_model = server_root_path + args_config.bert_model
+        args_config.data_dir = server_root_path + args_config.data_dir
+        args_config.output_dir = server_root_path + args_config.output_dir
+    """
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
     model_config.update_args(args_config)
-    # print(model_config.to_dict())
     model_config.print_config()
     return model_config
 
@@ -360,8 +326,6 @@ def main():
     train_loader, dev_loader, test_loader, num_train_steps, label_list = load_data(config)
     model, optimizer, device, n_gpu = load_model(config, num_train_steps, label_list)
     train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
-    # train(model, optimizer, train_dataloader, dev_dataloader, test_dataloader, config, \
-    # device, n_gpu)
 
 
 if __name__ == "__main__":

@@ -47,7 +47,9 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
     test_best_f1 = 0
     test_best_loss = 1e10
     model.train()
+    optimizer.zero_grad()
     train_start = time.time()
+
     for idx in range(int(config.num_train_epochs)):
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
@@ -62,7 +64,6 @@ def cws_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
             if n_gpu > 1:
                 loss = loss.mean()
 
-            model.zero_grad()
             loss.backward()
             # nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=config.clip_grad)
 

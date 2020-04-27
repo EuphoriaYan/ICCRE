@@ -285,3 +285,45 @@ class ifengProcessor(DataProcessor):
             text_a = "[SEP]".join(line[1:]).strip("[SEP]")
             examples.append(InputExample(guid=guid, text_a=text_a, label=label))
         return examples
+
+
+class DzgProcessor(DataProcessor):
+    """Processor for the dzg data set """
+
+    def get_train_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.txt")), "train")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "test")
+
+    def get_labels(self):
+        return ["art", "bud", "med", "tao"]
+
+    def _read_tsv(self, input_file, quotechar=None):
+        # reads a tab separated value file.
+        with open(input_file, "r", encoding='utf8', errors='ignore') as f:
+            reader = csv.reader(f, delimiter="|", quotechar=quotechar)
+            lines = []
+            for line in reader:
+                lines.append(line)
+            return lines
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = "{}_{}".format("dzg.clf", str(i))
+            text_a = line[0].strip()
+            label = line[1]
+            if not text_a or label is None:
+                print(guid)
+                print(text_a)
+                print(label)
+                continue
+            if label not in self.get_labels():
+                raise ValueError('label {} is wrong'.format(label))
+            examples.append(InputExample(guid=guid, text_a=text_a, label=[label]))
+        return examples

@@ -77,8 +77,6 @@ def args_parser():
     if args.cuda:
         torch.cuda.manual_seed_all(args.seed)
 
-    # if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
-    #     raise ValueError
     os.makedirs(args.output_dir, exist_ok=True)
 
     return args
@@ -175,7 +173,6 @@ def load_model(config, num_train_steps, label_list):
 
     model = BertTagger(config, num_labels=len(label_list))
     model.to(device)
-
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
 
