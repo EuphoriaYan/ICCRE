@@ -19,7 +19,7 @@ output_model_name=dzg_clf_jt_wcm_pytorch.bin
 
 export CUDA_VISIBLE_DEVICES=3
 
-python bin/run_bert_classifer.py \
+python bin/run_bert_classifier.py \
 --data_sign ${data_sign} \
 --config_path ${config_path} \
 --data_dir ${data_dir} \
