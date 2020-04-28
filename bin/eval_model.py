@@ -157,6 +157,7 @@ def eval_checkpoint(model_object, eval_dataloader, device, label_list, task_sign
         p_p = precision_score(pos_gold, pos_pred, average='macro')
         p_r = recall_score(pos_gold, pos_pred, average='macro')
         p_f1 = 2 * (p_p * p_r) / (p_p + p_r)
+        p_f1, p_p, p_r = round(p_f1, 4), round(p_p, 4), round(p_r, 4)
         return average_loss, p_p, p_r, p_f1
 
 

@@ -285,6 +285,7 @@ def eval_checkpoint(model_object, eval_dataloader, config,
             logits = model_object(input_ids, segment_ids, input_mask)
 
         eval_loss += tmp_eval_loss.mean().item()
+        eval_steps += 1
 
         logits = logits.detach().cpu().numpy()
         label_ids = label_ids.to("cpu").numpy()
