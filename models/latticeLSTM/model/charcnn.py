@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Author: Jie Yang
-# @Date:   2017-10-17 16:47:32
-# @Last Modified by:   Jie Yang,     Contact: jieynlp@gmail.com
-# @Last Modified time: 2017-12-06 23:24:42
 
 
 import os 

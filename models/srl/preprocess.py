@@ -1,5 +1,3 @@
-# Implemented by Charles(charlee@sjtu.edu.cn) & Shexia He(heshexia@sjtu.edu.cn).
-# This file is used for data process.
 
 import os
 import sys 

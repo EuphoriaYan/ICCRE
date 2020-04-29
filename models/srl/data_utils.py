@@ -1,5 +1,3 @@
-# Implemented by Charles.
-
 # the CoNLL2009 format is : # you can see here (http://ufal.mff.cuni.cz/conll2009-st/task-description.html)
 # ID(1) FORM(2) LEMMA(3) PLEMMA(4) POS(5) PPOS(6) FEAT(7) PFEAT(8) HEAD(9) PHEAD(10) DEPREL(11) PDEPREL(12) FILLPRED(13) PRED(14) APREDs(15) 
 # The train and development dataset is satisified with this format

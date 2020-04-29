@@ -1,10 +1,6 @@
 #!/usr/bin/env python3 
 # -*- coding: utf-8 -*- 
 
-# Utilities for working with the local dataset cache.
-# This file is adapted from the AllenNLP library at https://github.com/allenai/allennlp
-# Copyright by the AllenNLP authors.
-
 
 import os
 import sys 
@@ -31,9 +27,6 @@ from typing import Optional, Tuple, Union, IO, Callable, Set
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-
-# PYTORCH_PRETRAINED_BERT_CACHE = Path(os.getenv('PYTORCH_PRETRAINED_BERT_CACHE',
-#                                                Path.home() / '.pytorch_pretrained_bert'))
 PYTORCH_PRETRAINED_BERT_CACHE = ''
 
 def url_to_filename(url: str, etag: str = None) -> str:

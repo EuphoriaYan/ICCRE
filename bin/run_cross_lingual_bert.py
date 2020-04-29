@@ -8,10 +8,6 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-use_server = True
-server_root_path = '/yjs/euphoria/GCCRE/'
-server_cuda_device = 'cuda:2'
-
 import csv
 import logging
 import argparse
@@ -270,11 +266,6 @@ def eval_checkpoint(model_object, eval_dataloader, config, device, n_gpu, label_
 
 
 def merge_config(args_config):
-    if use_server:
-        args_config.config_path = server_root_path + args_config.config_path
-        args_config.bert_model = server_root_path + args_config.bert_model
-        args_config.data_dir = server_root_path + args_config.data_dir
-        args_config.output_dir = server_root_path + args_config.output_dir
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
     model_config.update_args(args_config)

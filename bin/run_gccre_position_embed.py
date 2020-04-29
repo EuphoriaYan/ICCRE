@@ -9,10 +9,6 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-use_server = True
-server_root_path = '/yjs/euphoria/GCCRE/'
-server_cuda_device = 'cuda:0'
-
 import torch
 import torch.nn as nn
 from torch.utils.data.distributed import DistributedSampler

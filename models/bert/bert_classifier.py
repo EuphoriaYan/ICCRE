@@ -2,16 +2,6 @@
 # -*- coding: utf-8 -*- 
 
 
-
-# Author: Yuxian Meng 
-# Contact: yuxian_meng@shannonai.com 
-# Last update: 2019.03.23 
-# First create: 2019.03.23 
-# Description:
-# bert_classifier.py 
-# applied to Text_Classification and Sentence_Pair tasks
-
-
 import os 
 import sys 
 

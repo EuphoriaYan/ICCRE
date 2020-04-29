@@ -8,8 +8,6 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-server_root_path = '/yjs/euphoria/GCCRE/'
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -86,11 +84,6 @@ def args_parser():
 
 
 def merge_config(args_config):
-    if args_config.use_server:
-        args_config.config_path = server_root_path + args_config.config_path
-        args_config.bert_model = server_root_path + args_config.bert_model
-        args_config.data_dir = server_root_path + args_config.data_dir
-        args_config.output_dir = server_root_path + args_config.output_dir
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
     model_config.update_args(args_config)
