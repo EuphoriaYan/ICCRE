@@ -34,7 +34,8 @@ class BiLSTM_Clf(nn.Module):
                               batch_first=True,
                               dropout=self.lstm_dropout,
                               bidirectional=True)
-        self.pooling = nn.AvgPool1d(self.seq_length)
+        # self.pooling = nn.AvgPool1d(self.seq_length)
+        self.pooling = nn.MaxPool1d(self.seq_length)
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
         self.softmax = nn.Softmax(dim=-1)
         self.loss_fct = nn.CrossEntropyLoss()
@@ -48,7 +49,7 @@ class BiLSTM_Clf(nn.Module):
         pool_features = self.pooling(lstm_features)
         pool_features = pool_features.squeeze_()
         logits = self.classifier(pool_features)
-        logits = logits.view(-1, self.num_labels)
+        # logits = logits.view(-1, self.num_labels)
         if labels is not None:
             return self.loss_fct(logits, labels)
         else:
