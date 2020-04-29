@@ -37,6 +37,7 @@ class BiLSTM_Clf(nn.Module):
         self.pooling = nn.AvgPool1d(self.seq_length)
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
         self.softmax = nn.Softmax(dim=-1)
+        self.loss_fct = nn.CrossEntropyLoss()
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, char_mask=None, use_crf=True):
         embedding_features = self.embedding(input_ids)
@@ -49,6 +50,6 @@ class BiLSTM_Clf(nn.Module):
         logits = self.classifier(pool_features)
         logits = logits.view(-1, self.num_labels)
         if labels is not None:
-            return nn.CrossEntropyLoss(logits, labels)
+            return self.loss_fct(logits, labels)
         else:
             return self.softmax(logits)
