@@ -11,6 +11,8 @@ if root_path not in sys.path:
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+import math
+import time
 
 from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam, warmup_linear
@@ -126,15 +128,16 @@ def load_data(config):
         print(set_type + " examples")
         for i in range(min(len(examples), 3)):
             print(examples[i])
-            sys.stdout.flush()
+        sys.stdout.flush()
         features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
                                                 task_sign=config.task_name)
         input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
         input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
         segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
         label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+        char_mask = torch.tensor([f.char_mask for f in features], dtype=torch.bool)
         label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
-        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, char_mask, label_len)
         # sampler = DistributedSampler(data)
         sampler = RandomSampler(data)
         return data, sampler
@@ -144,17 +147,19 @@ def load_data(config):
     dev_data, dev_sampler = generate_data(dev_examples, "dev")
     test_data, test_sampler = generate_data(test_examples, "test")
 
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.batch_size)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.train_batch_size)
 
-    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.batch_size)
+    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.dev_batch_size)
 
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.batch_size)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
 
-    num_train_steps = int(len(train_examples) / config.batch_size * config.num_train_epochs)
+    num_train_steps = int(math.ceil(len(train_examples) / config.train_batch_size) * config.num_train_epochs)
     print("Train_examples: ", len(train_examples))
     print("Dev_examples: ", len(dev_examples))
     print("Test_examples: ", len(test_examples))
     print("Total train steps: ", num_train_steps)
+    sys.stdout.flush()
+
     return train_dataloader, dev_dataloader, test_dataloader, num_train_steps, label_list
 
 
@@ -209,8 +214,7 @@ def main():
     config = merge_config(args_config)
     train_loader, dev_loader, test_loader, num_train_steps, label_list = load_data(config)
     model, optimizer, device, n_gpu = load_model(config, num_train_steps, label_list)
-    if config.do_train:
-        train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
+    train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
 
 
 if __name__ == "__main__":
