@@ -147,11 +147,9 @@ def load_data(config):
     dev_data, dev_sampler = generate_data(dev_examples, "dev")
     test_data, test_sampler = generate_data(test_examples, "test")
 
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.train_batch_size)
-
-    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.dev_batch_size)
-
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.batch_size)
+    dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.batch_size)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.batch_size)
 
     num_train_steps = int(math.ceil(len(train_examples) / config.train_batch_size) * config.num_train_epochs)
     print("Train_examples: ", len(train_examples))

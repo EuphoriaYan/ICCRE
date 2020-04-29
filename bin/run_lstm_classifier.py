@@ -130,9 +130,7 @@ def load_data(config):
     test_data, test_sampler = generate_data(test_examples, "test")
 
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=config.batch_size)
-
     dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.batch_size)
-
     test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.batch_size)
 
     num_train_steps = int(len(train_examples) / config.batch_size * config.num_train_epochs)
