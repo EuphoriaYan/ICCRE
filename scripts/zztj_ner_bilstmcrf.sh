@@ -15,7 +15,7 @@ warmup=0.1
 checkpoint=5000
 output_model_name=zztj_ner_bilstm.bin
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 
 python bin/run_lstm_tagger.py \
 --data_sign ${data_sign} \
