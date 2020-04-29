@@ -11,18 +11,15 @@ if root_path not in sys.path:
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+from sklearn.metrics import accuracy_score, f1_score
+import time
 
 from utils.tokenization import BertTokenizer, CompTokenizer
 from utils.optimization import BertAdam, warmup_linear
-from utils.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from utils.config import Config
-from dataset_readers.bert_ner import *
-from dataset_readers.bert_pos import *
-from dataset_readers.bert_cws import *
-from dataset_readers.bert_css import *
-from models.BiLSTM_CRF.bilstm_crf import BiLSTM_CRF
+from dataset_readers.bert_single_sent import *
+from models.BiLSTM_CRF.bilstm_clf import BiLSTM_Clf
 from dataset_readers.bert_data_utils import convert_examples_to_features
-from bin.train_model import train
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -69,7 +66,6 @@ def args_parser():
     parser.add_argument("--warmup_proportion", default=0.1, type=float)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--seed", type=int, default=7777)
-    parser.add_argument("--use_crf", type=bool, default=True)
 
     args = parser.parse_args()
 
@@ -92,20 +88,9 @@ def args_parser():
 def load_data(config):
     # load some data and processor
     data_processor_list = {
-        "msra_ner": MsraNERProcessor,
-        "resume_ner": ResumeNERProcessor,
-        "ontonotes_ner": OntoNotesNERProcessor,
-        "ctb5_pos": Ctb5POSProcessor,
-        "ctb6_pos": Ctb6CWSProcessor,
-        "ud1_pos": Ud1POSProcessor,
-        "ctb6_cws": Ctb6CWSProcessor,
-        "pku_cws": PkuCWSProcessor,
-        "msr_cws": MsrCWSProcessor,
-        "zuozhuan_cws": ZuozhuanCWSProcessor,
-        "whitespace_cws": WhitespaceCWSPrecessor,
-        "shiji_css": ShijiCSSProcessor,
-        "sinica_ner": SinicaNERProcessor,
-        "zuozhuan_pos": ZuozhuanPOSProcessor,
+        "chn_sent": ChnSentiCorpProcessor,
+        "ifeng_clf": ifengProcessor,
+        "dzg_clf": DzgProcessor,
     }
 
     if config.data_sign not in data_processor_list:
@@ -171,7 +156,7 @@ def load_model(config, num_train_steps, label_list):
         device = torch.device("cpu")
         n_gpu = 0
 
-    model = BiLSTM_CRF(config, len(label_list))
+    model = BiLSTM_Clf(config, len(label_list))
 
     if config.use_server:
         model.to(device)
@@ -200,6 +185,134 @@ def load_model(config, num_train_steps, label_list):
     return model, optimizer, device, n_gpu
 
 
+def train(model, optimizer, train_dataloader, dev_dataloader, test_dataloader,
+          config, device, n_gpu, label_list):
+    global_step = 0
+    nb_tr_steps = 0
+    tr_loss = 0
+
+    dev_best_acc = 0
+    dev_best_f1 = 0
+    dev_best_loss = 10000000000000
+
+    model.train()
+    optimizer.zero_grad()
+    train_start = time.time()
+
+    for idx in range(int(config.num_train_epochs)):
+        tr_loss = 0
+        nb_tr_examples, nb_tr_steps = 0, 0
+        print("#######" * 7)
+        epoch_start = time.time()
+        print("EPOCH: %s/%s" % (str(idx + 1), config.num_train_epochs))
+
+        for step, batch in enumerate(train_dataloader):
+            batch = tuple(t.to(device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+            loss = model(input_ids, segment_ids, input_mask, label_ids)
+            if n_gpu > 1:
+                loss = loss.mean()
+
+            loss.backward()
+
+            tr_loss += loss.item()
+
+            nb_tr_examples += input_ids.size(0)
+            nb_tr_steps += 1
+
+            if (step + 1) % config.gradient_accumulation_steps == 0:
+                optimizer.step()
+                optimizer.zero_grad()
+                global_step += 1
+
+            if (nb_tr_steps+1) % config.checkpoint == 0:
+                print("-*-" * 15)
+                print("current training loss is : ")
+                print(loss.item())
+
+                dev_loss, dev_acc, dev_f1 = eval_checkpoint(model,
+                                                            dev_dataloader,
+                                                            config, device,
+                                                            n_gpu, label_list,
+                                                            eval_sign="dev")
+                print("......" * 10)
+                print("DEV: loss, acc, f1")
+                print(dev_loss, dev_acc, dev_f1)
+
+                if dev_f1 > dev_best_f1 or dev_acc > dev_best_acc:
+                    dev_best_acc = dev_acc
+                    dev_best_loss = dev_loss
+                    dev_best_f1 = dev_f1
+
+                    # export model
+                    if config.export_model:
+                        model_to_save = model.module if hasattr(model, "module") else model
+                        output_model_file = os.path.join(config.output_dir, config.output_model_name)
+                        torch.save(model_to_save.state_dict(), output_model_file)
+
+                print("-*-" * 15)
+                model.train()
+                # end of checkpoint
+        epoch_finish = time.time()
+        print("EPOCH: %d; TIME: %.2fs" % (idx, epoch_finish - epoch_start), flush=True)
+        # end of epoch
+
+    train_finish = time.time()
+    print("TOTAL_TIME: %.2fs" % (train_finish - train_start))
+
+    print("=&=" * 15)
+    print("DEV: current best f1, acc, loss ")
+    print(dev_best_f1, dev_best_acc, dev_best_loss)
+    print("=&=" * 15)
+
+
+def eval_checkpoint(model_object, eval_dataloader, config,
+                    device, n_gpu, label_list, eval_sign="dev"):
+    # input_dataloader type can only be one of dev_dataloader, test_dataloader
+    model_object.eval()
+
+    idx2label = {i: label for i, label in enumerate(label_list)}
+
+    eval_loss = 0
+    eval_steps = 0
+    gold_all = []
+    pred_all = []
+
+    for batch in eval_dataloader:
+        batch = tuple(t.to(device) for t in batch)
+        input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = batch
+
+        input_ids = input_ids.to(device)
+        input_mask = input_mask.to(device)
+        segment_ids = segment_ids.to(device)
+        label_ids = label_ids.to(device)
+
+        with torch.no_grad():
+            tmp_eval_loss = model_object(input_ids, segment_ids, input_mask, label_ids)
+            logits = model_object(input_ids, segment_ids, input_mask)
+
+        eval_loss += tmp_eval_loss.mean().item()
+        eval_steps += 1
+
+        logits = logits.detach().cpu().numpy()
+        label_ids = label_ids.to("cpu").numpy()
+        logits = np.argmax(logits, axis=-1)
+
+        logits = logits.tolist()
+        label_ids = label_ids.tolist()
+        pred_all.extend(logits)
+        gold_all.extend(label_ids)
+
+    acc = accuracy_score(gold_all, pred_all)
+    f1 = f1_score(gold_all, pred_all, average='macro')
+
+    average_loss = round(eval_loss / eval_steps, 4)
+    eval_acc = round(acc, 4)
+    eval_f1 = round(f1, 4)
+
+    return average_loss, eval_acc, eval_f1  # eval_precision, eval_recall, eval_f1
+
+
 def merge_config(args_config):
     model_config_path = args_config.config_path
     model_config = Config.from_json_file(model_config_path)
@@ -213,8 +326,7 @@ def main():
     config = merge_config(args_config)
     train_loader, dev_loader, test_loader, num_train_steps, label_list = load_data(config)
     model, optimizer, device, n_gpu = load_model(config, num_train_steps, label_list)
-    if config.do_train:
-        train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
+    train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
 
 
 if __name__ == "__main__":

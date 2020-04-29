@@ -1,12 +1,4 @@
-#!/usr/bin/env python3 
-# -*- coding: utf-8 -*- 
-
-
-# Author: Xiaoy LI 
-# Last udpate: 2019.02.18 
-# First create: 2019.02.18 
-# Description:
-# change the repo path for running the process 
+#!/usr/bin/env python3
 
 
 import os 
