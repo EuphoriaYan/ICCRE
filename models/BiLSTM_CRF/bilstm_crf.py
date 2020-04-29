@@ -36,7 +36,7 @@ class BiLSTM_CRF(nn.Module):
                               bidirectional=True)
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
 
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, use_crf=True):
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, char_mask=None, use_crf=True):
         embedding_features = self.embedding(input_ids)
         # Use batch first, so the input/output shape of lstm is (batch, seq, input_size/hidden_size)
         lstm_features = self.bilstm(embedding_features)[0]
