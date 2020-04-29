@@ -151,13 +151,11 @@ def load_data(config):
     dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=config.batch_size)
     test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.batch_size)
 
-    num_train_steps = int(math.ceil(len(train_examples) / config.train_batch_size) * config.num_train_epochs)
+    num_train_steps = int(math.ceil(len(train_examples) / config.batch_size) * config.num_train_epochs)
     print("Train_examples: ", len(train_examples))
     print("Dev_examples: ", len(dev_examples))
     print("Test_examples: ", len(test_examples))
     print("Total train steps: ", num_train_steps)
-    sys.stdout.flush()
-
     return train_dataloader, dev_dataloader, test_dataloader, num_train_steps, label_list
 
 
