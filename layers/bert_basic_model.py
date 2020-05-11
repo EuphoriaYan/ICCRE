@@ -509,10 +509,11 @@ class PreTrainedBertModel(nn.Module):
                 new_key = key.replace('gamma', 'weight')
             if 'beta' in key:
                 new_key = key.replace('beta', 'bias')
-            if not key.startswith('bert.') and not key.startswith('cls.') and 'metadata' not in key:
-                # can load electra weights
-                # electra weights: electra.xxx , bert weights: bert.xxx
-                # not use electra's generator's weights.
+
+            # can load electra weights
+            # electra weights: electra.xxx , bert weights: bert.xxx
+            # not use electra's generator's weights.
+            if not key.startswith('bert.') and not key.startswith('cls.') and not key.startswith('generator.') and 'metadata' not in key:
                 if 'electra' in key:
                     new_key = (new_key if new_key else key).replace('electra', 'bert')
                 else:

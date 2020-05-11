@@ -27,9 +27,11 @@ class BertTagger(nn.Module):
         super(BertTagger, self).__init__()
         self.num_labels = num_labels
 
-        bert_config = BertConfig.from_dict(config.bert_config.to_dict()) 
-        self.bert = BertModel(bert_config)
-
+        bert_config = BertConfig.from_dict(config.bert_config.to_dict())
+        if config.bert_model == '':
+            self.bert = BertModel(bert_config)
+        else:
+            self.bert = BertModel.from_pretrained(config.bert_model, )
         if config.bert_frozen == "true":
             print("!-!"*20) 
             print("Please notice that the bert grad is false")
@@ -43,8 +45,6 @@ class BertTagger(nn.Module):
         # self.classifier2 = nn.Linear(int(config.hidden_size/2), num_labels)
 
         # self.layer_norm = BertLayerNorm(config.hidden_size, )
-
-        self.bert = self.bert.from_pretrained(config.bert_model, )
 
         if config.classifier_sign == "single_linear":
             self.classifier = SingleLinearClassifier(config.hidden_size, self.num_labels) 

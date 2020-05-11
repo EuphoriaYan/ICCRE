@@ -286,26 +286,26 @@ class ZztjNERProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
         lines = []
-        for train_file in os.listdir(data_dir):
-            num = int(train_file[:-4])
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
             if num < self.cut:
-                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
         return self._create_examples(lines, "train")
 
     def get_dev_examples(self, data_dir):
         lines = []
-        for train_file in os.listdir(data_dir):
-            num = int(train_file[:-4])
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
             if num >= self.cut:
-                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
         return self._create_examples(lines, "dev")
 
     def get_test_examples(self, data_dir):
         lines = []
-        for train_file in os.listdir(data_dir):
-            num = int(train_file[:-4])
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
             if num >= self.cut:
-                lines.extend(self._read_tsv(os.path.join(data_dir, train_file)))
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
         return self._create_examples(lines, "test")
 
     def get_labels(self):
