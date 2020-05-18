@@ -513,7 +513,7 @@ class PreTrainedBertModel(nn.Module):
             # can load electra weights
             # electra weights: electra.xxx , bert weights: bert.xxx
             # not use electra's generator's weights.
-            if not key.startswith('bert.') and not key.startswith('cls.') and not key.startswith('generator.') and 'metadata' not in key:
+            if not key.startswith('bert.') and not key.startswith('cls.') and 'metadata' not in key:
                 if 'electra' in key:
                     new_key = (new_key if new_key else key).replace('electra', 'bert')
                 else:
@@ -548,6 +548,9 @@ class PreTrainedBertModel(nn.Module):
         if len(unexpected_keys) > 0:
             logger.warning("Weights from pretrained model not used in {}: {}".format(
                 model.__class__.__name__, unexpected_keys))
+        if len(error_msgs) > 0:
+            logger.error("Errors in {}: {}".format(
+                model.__class__.__name__, error_msgs))
         if tempdir:
             # Clean up temp dir
             shutil.rmtree(tempdir)

@@ -21,9 +21,8 @@ if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
 
-from layers.basic_bert_model import *
-
-
+from layers.bert_basic_model import *
+from torch import nn
 
 
 class TransformerLayer(nn.Module):
@@ -40,5 +39,5 @@ class TransformerLayer(nn.Module):
             if output_all_encoded_layers:
                 all_encoder_layers.append(hidden_states)
         if not output_all_encoded_layers:
-            all_encoder_layers.apepnd(hidden_states)
-        return all_encoder_layers 
+            all_encoder_layers.append(hidden_states)
+        return all_encoder_layers

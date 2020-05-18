@@ -4,17 +4,18 @@
 
 import os
 import sys
+
+root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+
 import csv
 import logging
 import argparse
 import random
 import numpy as np
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
-
-root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
-if root_path not in sys.path:
-    sys.path.insert(0, root_path)
 
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
