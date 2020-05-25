@@ -137,7 +137,7 @@ def load_data(config):
         sampler = RandomSampler(data)
         return data, sampler
 
-    # convert data example into featrues
+    # convert data example into features
     train_data, train_sampler = generate_data(train_examples, "train")
     dev_data, dev_sampler = generate_data(dev_examples, "dev")
     test_data, test_sampler = generate_data(test_examples, "test")
