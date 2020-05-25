@@ -549,8 +549,11 @@ class PreTrainedBertModel(nn.Module):
             logger.warning("Weights from pretrained model not used in {}: {}".format(
                 model.__class__.__name__, unexpected_keys))
         if len(error_msgs) > 0:
-            logger.error("Errors in {}: {}".format(
-                model.__class__.__name__, error_msgs))
+            logger.error("Errors in {}: ".format(
+                model.__class__.__name__))
+            for error_msg in error_msgs:
+                logger.error(error_msg)
+            raise ValueError
         if tempdir:
             # Clean up temp dir
             shutil.rmtree(tempdir)
