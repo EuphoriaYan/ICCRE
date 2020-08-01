@@ -1,8 +1,17 @@
+
+import os
+import sys
+
+
+root_path = "/".join(os.path.realpath(__file__).split("/")[:-3])
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+
 import re
 import bs4
 from bs4 import BeautifulSoup
-import os
 from tqdm import tqdm
+
 from utils.tokenization import BasicTokenizer
 
 tokenizer = BasicTokenizer()
