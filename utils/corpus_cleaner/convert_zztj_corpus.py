@@ -64,16 +64,40 @@ class zztj_reader():
         with open(os.path.join('dataset/ner/zztj', file_name), 'r', encoding='utf-8') as f:
             processed_html = f.readlines()
 
-        processed_html = [re.sub('[「」『』、]', '', l.strip()) for l in processed_html]
-        processed_html = [l.replace('○', '零') for l in processed_html]
+        # processed_html = [re.sub('[「」『』、]', '', l.strip()) for l in processed_html]
+        processed_html = [l.replace('○', '零')
+                              .replace('「', '“')
+                              .replace('」', '”')
+                              .replace('『', '‘')
+                              .replace('』', '’') for l in processed_html]
         pattern = re.compile('^\d+')
         processed_html = [re.sub(pattern, '', l.strip()) for l in processed_html]
         lines = []
 
-        split_pattern = re.compile(r'[，。：；！？]')
+        # split_pattern = re.compile(r'[，。：；！？]')
+        # split_pattern = re.compile()
+
+        def get_line_combine(lines):
+            lines = list(filter(None, lines))
+            split_pattern = list("。！？”’")
+            new_lines = []
+            new_line = ''
+            for line in lines:
+                if len(line) == 1 and line[0] in split_pattern:
+                    new_line += line
+                else:
+                    if new_line != '':
+                        new_lines.append(new_line)
+                        new_line = ''
+                    new_line += line
+            if new_line != '':
+                new_lines.append(new_line)
+            return new_lines
+
         for line in processed_html:
-            line = re.split(split_pattern, line)
-            line = [re.sub(pattern, '', l) for l in line]
+            line = re.split(r'([。！？”’])', line)
+            line = get_line_combine(line)
+            # line = [re.sub(pattern, '', l) for l in line]
             lines.extend(line)
         lines = [i.strip() for i in lines]
         lines = list(filter(None, lines))
