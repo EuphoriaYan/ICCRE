@@ -393,6 +393,53 @@ class ArticalNERProcessor(DataProcessor):
         return examples
 
 
+class GLNEWNERProcessor(DataProcessor):
+    # processor for the MSRA data set
+    def get_train_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.txt")), "train")
+
+    def get_test_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.txt")), "test")
+
+    def get_dev_examples(self, data_dir):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")
+
+    def get_labels(self):
+        # see base class
+        # return ["O", "B-noun_bookname", "I-noun_bookname", "B-noun_other", "I-noun_other", "X", "[CLS]", "[SEP]"]
+        return ["O", "B-noun_bookname", "I-noun_bookname", "B-noun_other", "I-noun_other"]
+
+
+    def _create_examples(self, lines, set_type):
+        # create examples for the training and dev sets.
+        examples = []
+        text_a = ''
+        text_b = None
+        label = []
+        for (i, line) in enumerate(lines):
+            if len(line) == 0:
+                guid = "{}_{}".format("gl_new.ner", str(i))
+                examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+                text_a = ''
+                label = []
+                continue
+            text_a += line[0]
+            label.append(line[1])
+            # guid = "{}_{}".format("msra.ner", str(i))
+            # examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+    @classmethod
+    def _read_tsv(cls, input_file, quotechar=None):
+        # reads a tab separated value file.
+        with open(input_file, "r", encoding='utf8', errors='ignore') as f:
+            reader = csv.reader(f, delimiter=" ", quotechar=quotechar)
+            lines = []
+            for line in reader:
+                lines.append(line)
+            return lines
+
+
 if __name__ == '__main__':
-    DataProcessor = ZztjNERProcessor()
-    DataProcessor.get_train_examples('dataset/ner/zztj')
+    DataProcessor = GLNEWNERProcessor()
+    DataProcessor.get_train_examples('dataset/gulian_txt')

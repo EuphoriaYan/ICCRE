@@ -101,6 +101,7 @@ def load_data(config):
         "sinica_ner": SinicaNERProcessor,
         "zuozhuan_pos": ZuozhuanPOSProcessor,
         "zztj_ner": ZztjNERProcessor,
+        "gulian_ner": GLNEWNERProcessor,
     }
 
     if config.data_sign not in data_processor_list:
