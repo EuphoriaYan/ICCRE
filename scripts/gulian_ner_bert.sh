@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data_dir=dataset/gulian
+data_dir=dataset/gulian_txt
 output_dir=output
 config_path=configs/bert.json
 bert_model=bert_daizhige
