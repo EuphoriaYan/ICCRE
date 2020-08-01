@@ -101,6 +101,7 @@ def load_data(config):
         "sinica_ner": SinicaNERProcessor,
         "zuozhuan_pos": ZuozhuanPOSProcessor,
         "zztj_ner": ZztjNERProcessor,
+        "zztj_gulian_ner": ZztjForGulianNERProcessor,
         "gulian_ner": GLNEWNERProcessor,
     }
 

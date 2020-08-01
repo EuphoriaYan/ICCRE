@@ -266,7 +266,6 @@ class SinicaNERProcessor(DataProcessor):
         return examples
 
 
-
 class ZztjNERProcessor(DataProcessor):
 
     def __init__(self):
@@ -321,6 +320,84 @@ class ZztjNERProcessor(DataProcessor):
             text_b = None
             label = line[1].strip()
             label = label.split(" ")
+            guid = "{}_{}".format("zztj.ner", str(i))
+            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+
+class ZztjForGulianNERProcessor(DataProcessor):
+
+    def __init__(self):
+        super(ZztjForGulianNERProcessor, self).__init__()
+        # ["O", "B-noun_bookname", "I-noun_bookname", "B-noun_other", "I-noun_other"]
+        self.label_map = {
+            'O': 'O',
+            'B-liter': 'B-noun_bookname',
+            'B-peop': 'B-noun_other',
+            'B-tpn': 'B-noun_other',
+            'B-date': 'O',
+            'B-offi': 'O',
+            'I-liter': 'I-noun_bookname',
+            'I-peop': 'I-noun_other',
+            'I-tpn': 'I-noun_other',
+            'I-date': 'O',
+            'I-offi': 'O',
+        }
+        self.cut = 280
+
+    # processor for the zztj dataset
+    @classmethod
+    def _read_tsv(cls, input_file, quotechar=None):
+        # reads a tab separated value file.
+        with open(input_file, "r", encoding='utf-8') as f:
+            reader = csv.reader(f, delimiter="|", quotechar=quotechar)
+            lines = []
+            for line in reader:
+                lines.append(line)
+            return lines
+
+    def get_train_examples(self, data_dir):
+        lines = []
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
+            if num < self.cut:
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
+        return self._create_examples(lines, "train")
+
+    def get_dev_examples(self, data_dir):
+        lines = []
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
+            if num >= self.cut:
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
+        return self._create_examples(lines, "dev")
+
+    def get_test_examples(self, data_dir):
+        lines = []
+        for file in os.listdir(data_dir):
+            num = int(file[:-4])
+            if num >= self.cut:
+                lines.extend(self._read_tsv(os.path.join(data_dir, file)))
+        return self._create_examples(lines, "test")
+
+    def get_labels(self):
+        # return ['O',
+        #         'B-liter', 'B-peop', 'B-tpn', 'B-date', 'B-offi',
+        #         'I-liter', 'I-peop', 'I-tpn', 'I-date', 'I-offi']
+        return ["O", "B-noun_bookname", "I-noun_bookname", "B-noun_other", "I-noun_other"]
+
+    def label_mapping(self, label):
+        return self.label_map[label]
+
+    def _create_examples(self, lines, set_type):
+        # create examples for the training and dev sets
+        examples = []
+        for (i, line) in enumerate(lines):
+            text_a = line[0].strip()
+            text_b = None
+            label = line[1].strip()
+            label = label.split(" ")
+            label = [self.label_map[l] for l in label]
             guid = "{}_{}".format("zztj.ner", str(i))
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
