@@ -3,19 +3,19 @@
 data_dir=dataset/gulian_txt
 output_dir=output
 config_path=configs/bert.json
-bert_model=chinese_L-12_H-768_A-12
+bert_model=bert_daizhige
 
 data_sign=gulian_ner
 task_name=ner
 max_seq_len=128
-train_batch=64
-dev_batch=32
-test_batch=32
+train_batch=128
+dev_batch=128
+test_batch=128
 learning_rate=5e-5
 num_train_epochs=4
 warmup=0.1
 checkpoint=500
-output_model_name=gulian_ner_chinese_L-12_H-768_A-12.bin
+output_model_name=gulian_ner_bert_daizhige.bin
 
 export CUDA_VISIBLE_DEVICES=0
 
