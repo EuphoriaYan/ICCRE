@@ -149,7 +149,7 @@ chinese_wcm_jt_pytorch/
 chinese_wcm_ft_pytorch/
 chinese_L-12_H-768_A-12/
 RoBERTa_zh_L12_PyTorch/
-bert_daizhege/
+bert_daizhige/
 
 # pre-trained chinese word embedding
 sgns.sikuquanshu.word/

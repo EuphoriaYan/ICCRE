@@ -320,7 +320,7 @@ def merge_config(args_config):
 def article_ckpt():
     args_config = args_parser()
     config = merge_config(args_config)
-    test_data_list, label_list, book_list, tokenizer = load_data(config)
+    test_data_list, label_list, book_list, tokenizer = load_book_data(config)
     model, device, n_gpu = load_model(config, label_list)
     for test_data, book in zip(test_data_list, book_list):
         print(book)
@@ -361,7 +361,7 @@ def main():
         label_len = test_data[4]
         new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
         sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
-        with open(os.path.join(config.output_dir, book), 'w', encoding='utf-8') as f:
+        with open(os.path.join(config.output_dir, config.data_sign + '_result.txt'), 'w', encoding='utf-8') as f:
             for i in sents:
                 f.write(i + '\n')
 
