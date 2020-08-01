@@ -2,8 +2,8 @@
 
 data_dir=dataset/gulian_txt
 output_dir=output
-config_path=configs/bert.json
-bert_model=bert_daizhige
+config_path=configs/wcm_bert.json
+bert_model=chinese_wcm_ft_pytorch
 
 data_sign=gulian_ner
 task_name=ner
@@ -15,9 +15,9 @@ learning_rate=5e-5
 num_train_epochs=4
 warmup=0.1
 checkpoint=500
-output_model_name=gulian_ner_bert_daizhige.bin
+output_model_name=gulian_ner_chinese_wcm_ft_pytorch.bin
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=2
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
@@ -28,7 +28,7 @@ python bin/run_bert_tagger.py \
 --max_seq_length ${max_seq_len} \
 --do_train \
 --do_eval \
---use_crf \
+--use_comp \
 --train_batch_size ${train_batch} \
 --dev_batch_size ${dev_batch} \
 --test_batch_size ${test_batch} \

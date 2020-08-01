@@ -85,7 +85,7 @@ def args_parser():
     return args
 
 
-def load_data(config):
+def load_book_data(config):
     # load some data and processor
     data_processor_list = {
         "msra_ner": MsraNERProcessor,
@@ -151,6 +151,71 @@ def load_data(config):
         # test_dataloader_list.append(test_dataloader)
 
     return test_data_list, label_list, book_list, tokenizer
+
+
+def load_data(config):
+    # load some data and processor
+    data_processor_list = {
+        "msra_ner": MsraNERProcessor,
+        "resume_ner": ResumeNERProcessor,
+        "ontonotes_ner": OntoNotesNERProcessor,
+        "ctb5_pos": Ctb5POSProcessor,
+        "ctb6_pos": Ctb6CWSProcessor,
+        "ud1_pos": Ud1POSProcessor,
+        "ctb6_cws": Ctb6CWSProcessor,
+        "pku_cws": PkuCWSProcessor,
+        "msr_cws": MsrCWSProcessor,
+        "zuozhuan_cws": ZuozhuanCWSProcessor,
+        "book_cws": BookCWSProcessor,
+        "artical_cws": ArticalCWSProcessor,
+        "artical_ner": ArticalNERProcessor,
+        "gulian_ner": GLNEWNERProcessor,
+    }
+
+    if config.data_sign not in data_processor_list:
+        raise ValueError("Data_sign not found: %s" % config.data_sign)
+
+    data_processor = data_processor_list[config.data_sign]()
+
+    label_list = data_processor.get_labels()
+    if config.use_comp:
+        tokenizer = CompTokenizer(config.bert_model)
+    else:
+        tokenizer = BertTokenizer.from_pretrained(config.bert_model, do_lower_case=True)
+
+    # load data exampels
+    test_examples = data_processor.get_test_examples(config.data_dir)
+
+    def generate_data(examples, sampler_method='random'):
+        features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
+                                                task_sign=config.task_name)
+        input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+        char_mask = torch.tensor([f.char_mask for f in features], dtype=torch.bool)
+        label_len = torch.tensor([f.label_len for f in features], dtype=torch.long)
+        return input_ids, input_mask, segment_ids, label_ids, char_mask, label_len
+        # data = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        # sampler = DistributedSampler(data)
+        # sampler_list = {
+        #    'random': RandomSampler,
+        #    'sequential': SequentialSampler,
+        # }
+        # if sampler_method not in sampler_list:
+        #    raise ValueError("sample method not found.")
+        # sampler = sampler_list[sampler_method](data)
+        # return data, sampler
+
+    # convert data example into featrues
+
+    input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = generate_data(test_examples)
+    # test_data, test_sampler = generate_data(test_examples, 'sequential')
+    test_data = [input_ids, input_mask, segment_ids, label_ids, char_mask, label_len]
+    # test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
+    # test_dataloader_list.append(test_dataloader)
+
+    return test_data, label_list, tokenizer
 
 
 def load_model(config, label_list):
@@ -279,11 +344,27 @@ def article_ckpt():
         sys.stdout.flush()
 
 
-
-
-
 def main():
-    # article_ckpt()
+    args_config = args_parser()
+    config = merge_config(args_config)
+    test_data, label_list, tokenizer = load_data(config)
+    model, device, n_gpu = load_model(config, label_list)
+    test_dataset = TensorDataset(*test_data)
+    test_sampler = SequentialSampler(test_dataset)
+    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=config.test_batch_size)
+    output = test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer)
+    if output is not 0:
+        input_ids = test_data[0]
+        input_mask = test_data[1]
+        segment_ids = test_data[2]
+        label_ids = output
+        label_len = test_data[4]
+        new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
+        with open(os.path.join(config.output_dir, book), 'w', encoding='utf-8') as f:
+            for i in sents:
+                f.write(i + '\n')
+
 
 
 if __name__ == "__main__":
