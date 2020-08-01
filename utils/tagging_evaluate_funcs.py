@@ -175,11 +175,49 @@ def compute_performance(pred_label, gold_label, pred_mask, label_list, dims=2, m
 
 if __name__ == "__main__":
     model_pred = [0, 1, 2, 1, 2, 0, 0, 0, 0, 0, 3, 4, 1, 2, 1, 1]
-    entities = extract_entities(model_pred, start_label="1_3")
-    print(entities)
+    # entities = extract_entities(model_pred, start_label="1_3")
+    # print(entities)
 
     label_list = ["O", "B-noun_bookname", "I-noun_bookname", "B-noun_other", "I-noun_other"]
-    label_idx = split_index(label_list)
-    print(label_idx)
+    # label_idx = split_index(label_list)
+    # print(label_idx)
 
     pred_list = [label_list[i] for i in model_pred]
+
+    import itertools
+
+    sent = ''
+    idx = 0
+    group_label = []
+    for key, group in itertools.groupby(pred_list):
+        l = len(list(group))
+        if key.startswith('B') and l > 1:
+            for i in range(l):
+                group_label.append((key, 1))
+        else:
+            group_label.append((key, l))
+    group_label_final = []
+    for i in range(len(group_label)):
+        key, l = group_label[i]
+        # 是begin
+        if key.startswith('B'):
+            # 不是最后一个，可以往后看
+            if i < len(group_label) - 1:
+                nxt_key, nxt_l = group_label[i + 1]
+                # 合并begin和inner为一组
+                if nxt_key.startswith('I'):
+                    group_label_final.append((key[2:], l + nxt_l))
+                    i += 1
+                # 后面一个不是I，说明是单独的B，单独一组
+                else:
+                    group_label_final.append((key[2:], l))
+            # 最后一个，并且B开头，只能单独一组
+            else:
+                group_label_final.append((key[2:], l))
+        elif key.startswith('I'):
+            continue
+        # 应该只剩O
+        else:
+            group_label_final.append((key, l))
+    print(group_label)
+    print(group_label_final)

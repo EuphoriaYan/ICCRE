@@ -266,9 +266,7 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
         # if label_len > 1 and raw_label[1] == 1:
         #     raw_label[1] = 0
 
-        # raw_label = [label_map[i] for i in raw_label]
-
-        extract_entities(raw_label, start_label='1_3')
+        raw_label = [label_map[i] for i in raw_label]
 
         if task_name == 'BIO_cws':
             sent = ''
@@ -282,17 +280,50 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
             sents.append(sent)
         elif task_name == 'ner':
             import itertools
-            sent = ''
-            idx = 0
+            group_label = []
             for key, group in itertools.groupby(raw_label):
                 l = len(list(group))
-                for i in range(l):
-                    sent += raw_tokens[idx]
-                    idx += 1
-                if key == 'O':
-                    sent += ' '
+                if key.startswith('B') and l > 1:
+                    for i in range(l):
+                        group_label.append((key, 1))
                 else:
-                    sent += '/' + key + ' '
+                    group_label.append((key, l))
+            group_label_final = []
+            for i in range(len(group_label)):
+                key, l = group_label[i]
+                # 是begin
+                if key.startswith('B'):
+                    # 不是最后一个，可以往后看
+                    if i < len(group_label) - 1:
+                        nxt_key, nxt_l = group_label[i + 1]
+                        # 合并begin和inner为一组
+                        if nxt_key.startswith('I'):
+                            group_label_final.append((key[2:], l + nxt_l))
+                            i += 1
+                        # 后面一个不是I，说明是单独的B，单独一组
+                        else:
+                            group_label_final.append((key[2:], l))
+                    # 最后一个，并且B开头，只能单独一组
+                    else:
+                        group_label_final.append((key[2:], l))
+                elif key.startswith('I'):
+                    continue
+                # 应该只剩O
+                else:
+                    group_label_final.append((key, l))
+            sent = ''
+            idx = 0
+            for key, l in group_label_final:
+                if key == 'O':
+                    for i in range(l):
+                        sent += raw_tokens[idx]
+                        idx += 1
+                else:
+                    sent += '{{' + key + ':'
+                    for i in range(l):
+                        sent += raw_tokens[idx]
+                        idx += 1
+                    sent += '}}'
             sents.append(sent)
 
     return sents
