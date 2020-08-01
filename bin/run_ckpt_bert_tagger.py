@@ -216,7 +216,7 @@ def load_data(config):
     # test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
     # test_dataloader_list.append(test_dataloader)
 
-    return test_data, label_list, tokenizer
+    return test_examples, test_data, label_list, tokenizer
 
 
 def load_model(config, label_list):
@@ -251,16 +251,18 @@ def load_model(config, label_list):
 def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
     label_map = {i: label for i, label in enumerate(label_list)}
     sents = []
-    for input_ids, input_mask, segment_ids, label_ids, label_len in dataset:
-        tokens = tokenizer.convert_ids_to_tokens(input_ids.numpy().tolist())
-        raw_tokens = []
-        for token in tokens:
-            # skip comp-part tokens
-            if token.startswith('#'):
-                continue
-            else:
-                raw_tokens.append(token)
-        raw_tokens = raw_tokens[1:label_len + 1]
+    for input_str, input_mask, segment_ids, label_ids, label_len in \
+            zip(dataset[0], dataset[1], dataset[2], dataset[3], dataset[4]):
+        # tokens = tokenizer.convert_ids_to_tokens(input_ids.numpy().tolist())
+        # raw_tokens = []
+        # for token in tokens:
+        #     # skip comp-part tokens
+        #     if token.startswith('#'):
+        #         continue
+        #     else:
+        #         raw_tokens.append(token)
+        # raw_tokens = raw_tokens[1:label_len + 1]
+        raw_tokens = list(input_str)
 
         raw_label = label_ids[1:label_len + 1].numpy().tolist()
         # if label_len > 1 and raw_label[1] == 1:
@@ -387,19 +389,19 @@ def article_ckpt():
 def main():
     args_config = args_parser()
     config = merge_config(args_config)
-    test_data, label_list, tokenizer = load_data(config)
+    test_examples, test_data, label_list, tokenizer = load_data(config)
     model, device, n_gpu = load_model(config, label_list)
     test_dataset = TensorDataset(*test_data)
     test_sampler = SequentialSampler(test_dataset)
     test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=config.test_batch_size)
     output = test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer)
     if output is not 0:
-        input_ids = test_data[0]
+        input_str = [example.text_a for example in test_examples]
         input_mask = test_data[1]
         segment_ids = test_data[2]
         label_ids = output
         label_len = test_data[5]
-        new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
+        new_dataset = (input_str, input_mask, segment_ids, label_ids, label_len)
         sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
         with open(os.path.join(config.output_dir, config.data_sign + '_result.txt'), 'w', encoding='utf-8') as f:
             for i in sents:
