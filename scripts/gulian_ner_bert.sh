@@ -5,7 +5,7 @@ output_dir=output
 config_path=configs/bert.json
 bert_model=bert_daizhige
 
-data_sign=gulian
+data_sign=gulian_ner
 task_name=ner
 max_seq_len=128
 train_batch=64
