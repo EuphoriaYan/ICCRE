@@ -22,6 +22,7 @@ from dataset_readers.bert_cws import *
 from models.bert.bert_tagger import BertTagger
 from dataset_readers.bert_data_utils import convert_examples_to_features
 from bin.eval_model import eval_checkpoint
+from utils.tagging_evaluate_funcs import *
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -262,9 +263,12 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
         raw_tokens = raw_tokens[1:label_len + 1]
 
         raw_label = label_ids[1:label_len + 1].numpy().tolist()
-        if label_len > 1 and raw_label[1] == 1:
-            raw_label[1] = 0
-        raw_label = [label_map[i] for i in raw_label]
+        # if label_len > 1 and raw_label[1] == 1:
+        #     raw_label[1] = 0
+
+        # raw_label = [label_map[i] for i in raw_label]
+
+        extract_entities(raw_label, start_label='1_3')
 
         if task_name == 'BIO_cws':
             sent = ''
@@ -305,6 +309,10 @@ def test(model, test_dataloader, config, device, n_gpu, label_list, tokenizer):
     else:
         logits = eval_checkpoint(model, test_dataloader, device, label_list,
             config.task_name, config.use_crf, config.output_file)
+        if isinstance(logits, list):
+            for i in logits:
+                if len(i) < config.max_seq_length:
+                    i += [0] * (config.max_seq_length - len(i))
         logits = torch.tensor(logits, dtype=torch.long)
         return logits
 
@@ -331,11 +339,12 @@ def article_ckpt():
         if output is 0:
             continue
         else:
+            # input_ids, input_mask, segment_ids, label_ids, char_mask, label_len
             input_ids = test_data[0]
             input_mask = test_data[1]
             segment_ids = test_data[2]
             label_ids = output
-            label_len = test_data[4]
+            label_len = test_data[5]
             new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
             sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
             with open(os.path.join(config.output_dir, book), 'w', encoding='utf-8') as f:
@@ -358,7 +367,7 @@ def main():
         input_mask = test_data[1]
         segment_ids = test_data[2]
         label_ids = output
-        label_len = test_data[4]
+        label_len = test_data[5]
         new_dataset = TensorDataset(input_ids, input_mask, segment_ids, label_ids, label_len)
         sents = convert_feature_to_sents(new_dataset, tokenizer, label_list, config.task_name)
         with open(os.path.join(config.output_dir, config.data_sign + '_result.txt'), 'w', encoding='utf-8') as f:
