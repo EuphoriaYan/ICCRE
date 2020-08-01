@@ -2,8 +2,8 @@
 
 data_dir=dataset/gulian
 output_dir=output
-config_path=configs/traditional_bert.json
-bert_model=bert_gulian
+config_path=configs/bert.json
+bert_model=bert_daizhige
 
 data_sign=gulian
 task_name=ner
