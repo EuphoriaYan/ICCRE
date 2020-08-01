@@ -69,8 +69,8 @@ def load_tf_weights_in_bert(model, tf_checkpoint_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Converts tf bert ckpt weights to pytorch bin")
-    parser.add_argument("infile", type=str, help="Path to the ckpt.")
-    parser.add_argument("outfile", type=str, help="Path to the pytorch dump.")
+    parser.add_argument("--infile", type=str, help="Path to the ckpt.")
+    parser.add_argument("--outfile", type=str, help="Path to the pytorch dump.")
     args = parser.parse_args()
     bert_config = BertConfig.from_json_file("chinese_L-12_H-768_A-12/bert_config.json")
     model = BertModel(bert_config)
