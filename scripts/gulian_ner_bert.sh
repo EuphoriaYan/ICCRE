@@ -15,6 +15,7 @@ learning_rate=5e-5
 num_train_epochs=4
 warmup=0.1
 checkpoint=500
+pretrained_ckpt=zztj_gulian_ner_bert_daizhige.bin
 output_model_name=gulian_ner_bert_daizhige.bin
 
 export CUDA_VISIBLE_DEVICES=1
@@ -37,4 +38,5 @@ python bin/run_bert_tagger.py \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---output_model_name ${output_model_name}
+--output_model_name ${output_model_name} \
+--pretrained_ckpt ${pretrained_ckpt} \

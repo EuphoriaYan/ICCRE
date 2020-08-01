@@ -66,6 +66,7 @@ def args_parser():
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--seed", type=int, default=7777)
     parser.add_argument("--export_model", type=bool, default=True)
+    parser.add_argument("--pretrained_ckpt", type=str, default=None)
     args = parser.parse_args()
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps 
@@ -214,6 +215,9 @@ def main():
     config = merge_config(args_config)
     train_loader, dev_loader, test_loader, num_train_steps, label_list = load_data(config)
     model, optimizer, device, n_gpu = load_model(config, num_train_steps, label_list)
+    if config.pretrained_ckpt is not None:
+        pretrained_ckpt_path = os.path.join(config.output_dir, config.pretrained_ckpt)
+        model.load_state_dict(torch.load(pretrained_ckpt_path))
     train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
 
 
