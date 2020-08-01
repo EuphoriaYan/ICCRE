@@ -101,6 +101,7 @@ def load_data(config):
         "book_cws": BookCWSProcessor,
         "artical_cws": ArticalCWSProcessor,
         "artical_ner": ArticalNERProcessor,
+        "gulian_ner": GLNEWNERProcessor,
     }
 
     if config.data_sign not in data_processor_list:
@@ -251,7 +252,7 @@ def merge_config(args_config):
     return model_config
 
 
-def main():
+def article_ckpt():
     args_config = args_parser()
     config = merge_config(args_config)
     test_data_list, label_list, book_list, tokenizer = load_data(config)
@@ -276,6 +277,13 @@ def main():
                 for i in sents:
                     f.write(i+'\n')
         sys.stdout.flush()
+
+
+
+
+
+def main():
+    # article_ckpt()
 
 
 if __name__ == "__main__":
