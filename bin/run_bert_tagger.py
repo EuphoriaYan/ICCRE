@@ -218,6 +218,7 @@ def main():
     if config.pretrained_ckpt is not None:
         pretrained_ckpt_path = os.path.join(config.output_dir, config.pretrained_ckpt)
         model.load_state_dict(torch.load(pretrained_ckpt_path))
+        print('load pretrained_ckpt from ', pretrained_ckpt_path)
     train(model, optimizer, train_loader, dev_loader, test_loader, config, device, n_gpu, label_list)
 
 
