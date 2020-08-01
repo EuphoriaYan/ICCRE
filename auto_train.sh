@@ -1,4 +1,5 @@
-while True
+#!/bin/bash
+while [ 1 ]
 do
     exist=$(ps -p 7366)
     if [ "" == "$exist" ]; then
