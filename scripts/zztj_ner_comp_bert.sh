@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data_dir=dataset/ner/zztj
+data_dir=dataset/ner/zztj_new
 output_dir=output
 config_path=configs/wcm_bert.json
 bert_model=chinese_wcm_ft_pytorch
