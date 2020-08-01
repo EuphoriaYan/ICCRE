@@ -219,6 +219,28 @@ def ner_train(model, optimizer, train_dataloader, dev_dataloader, test_dataloade
         print("EPOCH: %d; TIME: %.2fs" % (idx, epoch_finish - epoch_start), flush=True)
         # end of epoch
 
+    if config.do_eval:
+        dev_loss, dev_prec, dev_rec, dev_f1 = eval_checkpoint(model, dev_dataloader, device,
+                                                              label_list, config.task_name,
+                                                              use_crf=config.use_crf)
+
+        print("..." * 10)
+        print("checkpoint: " + str(int((global_step + 1) / config.checkpoint)))
+        print("DEV: loss, acc, precision, recall, f1")
+        print(dev_loss, dev_prec, dev_rec, dev_f1)
+
+        if dev_f1 > dev_best_f1:
+            dev_best_loss = dev_loss
+            dev_best_precision = dev_prec
+            dev_best_recall = dev_rec
+            dev_best_f1 = dev_f1
+
+            if config.export_model:
+                # export a better model
+                model_to_save = model.module if hasattr(model, "module") else model
+                output_model_file = os.path.join(config.output_dir, config.output_model_name)
+                torch.save(model_to_save.state_dict(), output_model_file)
+
     train_finish = time.time()
     print("TOTAL_TIME: %.2fs" % (train_finish - train_start))
 

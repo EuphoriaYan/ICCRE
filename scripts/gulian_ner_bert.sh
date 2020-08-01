@@ -17,7 +17,7 @@ warmup=0.1
 checkpoint=500
 output_model_name=gulian_ner_bert_daizhige.bin
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 python bin/run_bert_tagger.py \
 --data_sign ${data_sign} \
