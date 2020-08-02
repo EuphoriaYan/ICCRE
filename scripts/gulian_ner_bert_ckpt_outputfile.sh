@@ -1,4 +1,5 @@
 
+export CUDA_VISIBLE_DEVICES=0
 
 python bin/run_ckpt_bert_tagger.py \
 --data_sign gulian_ner \
