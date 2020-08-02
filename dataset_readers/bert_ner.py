@@ -536,18 +536,9 @@ class GLTestNERProcessor(DataProcessor):
     def _create_examples(self, lines, set_type):
         # create examples for the training and dev sets.
         examples = []
-        text_a = ''
-        text_b = None
-        label = []
         for (i, line) in enumerate(lines):
-            if len(line) == 0:
-                guid = "{}_{}".format("gl_test.ner", str(i))
-                examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
-                text_a = ''
-                label = []
-                continue
-            text_a += line[0]
-            label.append(line[1])
+            guid = "{}_{}".format("gl_test.ner", str(i))
+            examples.append(InputExample(guid=guid, text_a=line[0], text_b=None, label=line[1]))
             # guid = "{}_{}".format("msra.ner", str(i))
             # examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
