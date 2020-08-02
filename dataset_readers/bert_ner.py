@@ -522,7 +522,7 @@ class GLTestNERProcessor(DataProcessor):
     # processor for the MSRA data set
 
     def get_test_examples(self, data_dir):
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "比赛结果测试集.txt")), "test")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "比赛结果测试集_new.txt")), "test")
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")

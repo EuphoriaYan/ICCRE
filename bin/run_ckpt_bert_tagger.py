@@ -209,7 +209,7 @@ def load_data(config):
         # sampler = sampler_list[sampler_method](data)
         # return data, sampler
 
-    # convert data example into featrues
+    # convert data example into features
 
     input_ids, input_mask, segment_ids, label_ids, char_mask, label_len = generate_data(test_examples)
     # test_data, test_sampler = generate_data(test_examples, 'sequential')
