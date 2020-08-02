@@ -521,8 +521,8 @@ class GLNEWNERProcessor(DataProcessor):
 class GLTestNERProcessor(DataProcessor):
     # processor for the MSRA data set
 
-    def get_test_examples(self, data_dir):
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "比赛结果测试集_new.txt")), "test")
+    def get_test_examples(self, data_dir, change_quota=True):
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "比赛结果测试集_new.txt"), change_quota), "test")
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")
@@ -544,13 +544,17 @@ class GLTestNERProcessor(DataProcessor):
         return examples
 
     @classmethod
-    def _read_tsv(cls, input_file, quotechar=None):
+    def _read_tsv(cls, input_file, change_quota=True):
         # reads a tab separated value file.
         with open(input_file, "r", encoding='utf8', errors='ignore') as f:
             lines = f.readlines()
-        lines = [line.strip()
-                     .replace('「', '“').replace('」', '”')
-                     .replace('『', '‘').replace('』', '’') for line in lines]
+        if change_quota:
+            lines = [line.strip()
+                         .replace('「', '“').replace('」', '”')
+                         .replace('『', '‘').replace('』', '’') for line in lines]
+        else:
+            lines = [line.strip() for line in lines]
+
         lines = [(line, len(line)*['O']) for line in lines]
 
         return lines

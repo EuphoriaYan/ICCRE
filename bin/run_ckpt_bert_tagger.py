@@ -188,6 +188,8 @@ def load_data(config):
     # load data exampels
     test_examples = data_processor.get_test_examples(config.data_dir)
 
+    test_examples_raw = data_processor.get_test_examples(config.data_dir, False)
+
     def generate_data(examples, sampler_method='random'):
         features = convert_examples_to_features(examples, label_list, config.max_seq_length, tokenizer,
                                                 task_sign=config.task_name)
@@ -217,7 +219,7 @@ def load_data(config):
     # test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=config.test_batch_size)
     # test_dataloader_list.append(test_dataloader)
 
-    return test_examples, test_data, label_list, tokenizer
+    return test_examples_raw, test_data, label_list, tokenizer
 
 
 def load_model(config, label_list):
