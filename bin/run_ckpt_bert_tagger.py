@@ -171,6 +171,7 @@ def load_data(config):
         "artical_cws": ArticalCWSProcessor,
         "artical_ner": ArticalNERProcessor,
         "gulian_ner": GLNEWNERProcessor,
+        "gulian_test_ner": GLTestNERProcessor,
     }
 
     if config.data_sign not in data_processor_list:

@@ -2,8 +2,8 @@
 export CUDA_VISIBLE_DEVICES=0
 
 python bin/run_ckpt_bert_tagger.py \
---data_sign gulian_ner \
---config_path configs/traditional_bert.json \
+--data_sign gulian_test_ner \
+--config_path configs/bert.json \
 --data_dir dataset/gulian_txt \
 --bert_model bert_daizhige \
 --use_crf \
