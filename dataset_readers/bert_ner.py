@@ -548,8 +548,11 @@ class GLTestNERProcessor(DataProcessor):
         # reads a tab separated value file.
         with open(input_file, "r", encoding='utf8', errors='ignore') as f:
             lines = f.readlines()
-        lines = [line.strip() for line in lines]
+        lines = [line.strip()
+                     .replace('「', '“').replace('」', '”')
+                     .replace('『', '‘').replace('』', '’') for line in lines]
         lines = [(line, len(line)*['O']) for line in lines]
+
         return lines
 
 
