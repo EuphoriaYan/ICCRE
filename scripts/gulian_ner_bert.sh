@@ -15,7 +15,7 @@ learning_rate=5e-5
 num_train_epochs=50
 warmup=0.1
 checkpoint=500
-pretrained_ckpt=zztj_gulian_ner_bert_daizhige.bin
+pretrained_ckpt=gulian_ner_bert_daizhige.bin
 output_model_name=gulian_ner_bert_daizhige.bin
 
 export CUDA_VISIBLE_DEVICES=2
