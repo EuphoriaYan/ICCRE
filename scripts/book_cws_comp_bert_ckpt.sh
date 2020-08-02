@@ -12,7 +12,7 @@ test_batch=32
 
 ckpt_name=shiji_cws_jt_wcm_pytorch.bin
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=2
 
 python bin/run_ckpt_bert_tagger.py \
 --data_sign ${data_sign} \

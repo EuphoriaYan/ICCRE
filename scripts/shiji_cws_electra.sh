@@ -36,4 +36,5 @@ python bin/run_bert_tagger.py \
 --checkpoint ${checkpoint} \
 --warmup_proportion ${warmup} \
 --output_dir ${output_dir} \
---output_model_name ${output_model_name}
+--output_model_name ${output_model_name} \
+--use_crf
