@@ -43,13 +43,26 @@ def split_long_sent(line):
 
 def get_line_combine(lines):
     lines = list(filter(None, lines))
-    split_pattern = list("。！？：；」』’”")
+    split_pattern = list("。！？：；」』）’”")
     new_lines = []
     new_line = ''
     for line in lines:
         # “寔之政論言當世理亂，雖鼂錯之徒不能過也。”
-        if len(line) == 1 and line[0] in split_pattern:
-            new_line += line
+        if line[0] in split_pattern:
+            if len(line) == 1:
+                new_line += line
+            else:
+                while len(line) > 0 and line[0] in split_pattern:
+                    new_line += line[0]
+                    line = line[1:]
+                if new_line != '':
+                    if len(new_line) <= MAX_SEQ_LEN:
+                        new_lines.append(new_line)
+                    else:
+                        new_lines.extend(split_long_sent(new_line))
+                    new_line = ''
+                if line != '':
+                    new_line += line
         else:
             if new_line != '':
                 if len(new_line) <= MAX_SEQ_LEN:
@@ -84,11 +97,12 @@ def main():
 
     with open('dataset/gulian_txt/命名实体识别测试集922_new.txt', 'w', encoding='utf-8') as f:
         for line in new_lines:
-            assert len(line) <= MAX_SEQ_LEN, line
-            f.write(line + '\n')
+            try:
+                _ = int(line)
+            except ValueError:
+                assert len(line) <= MAX_SEQ_LEN, line
+                f.write(line + '\n')
 
 
 if __name__ == '__main__':
-    line = '“寔之政論言當世理亂，雖鼂錯之徒不能過也。”'
-    line = re.split(r'([。：；！？」』])', line.strip())
-    get_line_combine(line)
+    main()
