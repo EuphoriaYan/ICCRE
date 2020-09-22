@@ -268,9 +268,6 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
         raw_tokens = list(input_str)
 
         raw_label = label_ids[1:label_len + 1].numpy().tolist()
-        # if label_len > 1 and raw_label[1] == 1:
-        #     raw_label[1] = 0
-
         raw_label = [label_map[i] for i in raw_label]
 
         if task_name == 'BIO_cws':
@@ -294,6 +291,7 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
                 else:
                     group_label.append((key, l))
             group_label_final = []
+            flag = False
             for i in range(len(group_label)):
                 key, l = group_label[i]
                 # 是begin
@@ -303,6 +301,7 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
                         nxt_key, nxt_l = group_label[i + 1]
                         # 合并begin和inner为一组
                         if nxt_key.startswith('I'):
+                            flag = True
                             group_label_final.append((key[2:], l + nxt_l))
                             i += 1
                         # 后面一个不是I，说明是单独的B，单独一组
@@ -312,7 +311,11 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
                     else:
                         group_label_final.append((key[2:], l))
                 elif key.startswith('I'):
-                    continue
+                    if flag:
+                        flag = False
+                        continue
+                    else:
+                        group_label_final.append((key[2:], l))
                 # 应该只剩O
                 else:
                     group_label_final.append((key, l))
