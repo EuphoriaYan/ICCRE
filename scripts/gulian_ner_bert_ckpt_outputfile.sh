@@ -12,5 +12,5 @@ python bin/run_ckpt_bert_tagger.py \
 --do_eval \
 --test_batch_size 64 \
 --output_dir output \
---ckpt_name gulian_ner_bert_daizhige.bin \
+--ckpt_name zztj_gulian_ner_bert_cpoac_dzg+diaolong+gl+zztj_2M_Kdev3.bin \
 --output_file \
