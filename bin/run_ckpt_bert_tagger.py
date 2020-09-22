@@ -8,6 +8,7 @@ root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
+import itertools
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -281,7 +282,6 @@ def convert_feature_to_sents(dataset, tokenizer, label_list, task_name):
             sent = sent.strip()
             sents.append(sent)
         elif task_name == 'ner':
-            import itertools
             group_label = []
             for key, group in itertools.groupby(raw_label):
                 l = len(list(group))

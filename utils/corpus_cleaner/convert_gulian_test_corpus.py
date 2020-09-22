@@ -1,4 +1,4 @@
-
+#-*- coding:utf-8 -*-
 import os
 import sys
 
@@ -12,6 +12,7 @@ import bs4
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import textwrap
+from pprint import pprint
 
 MAX_SEQ_LEN=126
 
@@ -28,8 +29,7 @@ def split_long_sent(line):
             if new_line != '':
                 new_lines.append(new_line)
             new_line = ''
-        else:
-            new_line += piece
+        new_line += piece
 
     if new_line != '':
         while len(new_line) > MAX_SEQ_LEN:
@@ -95,7 +95,7 @@ def main():
     # new_lines = list(filter(None, lines))
 
 
-    with open('dataset/gulian_txt/命名实体识别测试集922_new.txt', 'w', encoding='utf-8') as f:
+    with open('dataset/gulian_txt/命名实体识别测试集922_new_v0.4.txt', 'w', encoding='utf-8') as f:
         for line in new_lines:
             try:
                 _ = int(line)
