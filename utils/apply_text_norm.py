@@ -25,8 +25,14 @@ if root_path not in sys.path:
 
 
 
-def chinese_to_english_punct(sent, dims=1, replace_lst=["，", "。", "！", "？", "；", "（", "）", "＠", "＃", "【", "】", "+", "=", "-", "：", "“",  "”",  "‘",  "’",  "》",  "《",  "「",  "」"], target_lst =  [",", ".", "!", "?", ";", "(", ")", "@", "#", "[", "]", "+", "=", "-", ":", '"', '"', "'", "'", ">", "<", "{", "}", ]):
+def chinese_to_english_punct(sent, dims=1, replace_lst=None, target_lst=None):
     # 中国，中文，标点符号！你好？１２３４５＠＃【】+=-（）
+    if target_lst is None:
+        target_lst = [",", ".", "!", "?", ";", "(", ")", "@", "#", "[", "]", "+", "=", "-", ":", '"', '"', "'", "'",
+                      ">", "<", "{", "}", ]
+    if replace_lst is None:
+        replace_lst = ["，", "。", "！", "？", "；", "（", "）", "＠", "＃", "【", "】", "+", "=", "-", "：", "“", "”", "‘", "’",
+                       "》", "《", "「", "」"]
     if dims == 1:
         for item_idx, (replace_item, target_item) in enumerate(zip(replace_lst, target_lst)):
             if replace_item not in sent:
