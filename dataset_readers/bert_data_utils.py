@@ -104,7 +104,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
     features = []
     for (ex_index, example) in enumerate(examples):
-        tokens_a, char_mask_a = tokenizer.tokenize(process_sent(example.text_a))
+        tokens_a, char_mask_a = tokenizer.naive_tokenize(process_sent(example.text_a))
         tokens_b, char_mask_b = None, None
         if example.text_b:
             tokens_b, char_mask_b = tokenizer.tokenize(example.text_b)

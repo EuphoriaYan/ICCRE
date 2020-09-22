@@ -114,6 +114,12 @@ class BertTokenizer(object):
             char_masks.extend(sub_mask)
         return split_tokens, char_masks
 
+    def naive_tokenize(self, text):
+        split_tokens = list(text)
+        split_tokens = [token if self.vocab.get(token) is not None else '[UNK]' for token in split_tokens]
+        char_masks = [True] * len(split_tokens)
+        return split_tokens, char_masks
+
     def convert_tokens_to_ids(self, tokens):
         """Converts a sequence of tokens into ids using the vocab."""
         ids = []

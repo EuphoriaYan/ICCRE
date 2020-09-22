@@ -522,7 +522,7 @@ class GLTestNERProcessor(DataProcessor):
     # processor for the MSRA data set
 
     def get_test_examples(self, data_dir, change_quota=True):
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.txt"), change_quota), "test")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "命名实体识别测试集922_new_v0.4.txt"), change_quota), "test")
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.txt")), "dev")
@@ -549,11 +549,11 @@ class GLTestNERProcessor(DataProcessor):
         with open(input_file, "r", encoding='utf8', errors='ignore') as f:
             lines = f.readlines()
         if change_quota:
-            lines = [line.strip()
+            lines = [line.rstrip()
                          .replace('「', '“').replace('」', '”')
                          .replace('『', '‘').replace('』', '’') for line in lines]
         else:
-            lines = [line.strip() for line in lines]
+            lines = [line.rstrip() for line in lines]
 
         lines = [(line, len(line)*['O']) for line in lines]
 
