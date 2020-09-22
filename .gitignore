@@ -141,12 +141,9 @@ chaizi/
 chise-ids/
 
 # pytorch pre-trained model
-chinese_wwm_ext_pytorch/
-gccre_pos_emb_pytorch/
+*_pytorch/
 traditional_chinese_ft/
 traditional_chinese_jt/
-chinese_wcm_jt_pytorch/
-chinese_wcm_ft_pytorch/
 chinese_L-12_H-768_A-12/
 RoBERTa_zh_L12_PyTorch/
 bert_daizhige/
